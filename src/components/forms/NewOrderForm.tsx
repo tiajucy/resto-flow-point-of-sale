@@ -118,115 +118,169 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
           <TabsContent value="mesa" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="tableNumber">Número da Mesa</Label>
-              <Input 
-                id="tableNumber" 
-                placeholder="Ex: 5"
-                {...form.register("tableNumber", { shouldUnregister: true })}
-              />
-              {orderType === "mesa" && form.formState.errors.tableNumber && (
-                <p className="text-sm text-red-500">{form.formState.errors.tableNumber.message}</p>
+            <FormField
+              control={form.control}
+              name="tableNumber"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>Número da Mesa</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Ex: 5" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
+            />
           </TabsContent>
 
           <TabsContent value="retirada" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="customerName">Nome do Cliente</Label>
-              <Input 
-                id="customerName" 
-                placeholder="Nome completo"
-                {...form.register("customerName", { shouldUnregister: true })}
-              />
-              {orderType === "retirada" && form.formState.errors.customerName && (
-                <p className="text-sm text-red-500">{form.formState.errors.customerName?.message}</p>
+            <FormField
+              control={form.control}
+              name="customerName"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>Nome do Cliente</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Nome completo" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="customerPhone">WhatsApp</Label>
-              <Input 
-                id="customerPhone" 
-                placeholder="(00) 00000-0000"
-                {...form.register("customerPhone", { shouldUnregister: true })}
-              />
-              {orderType === "retirada" && form.formState.errors.customerPhone && (
-                <p className="text-sm text-red-500">{form.formState.errors.customerPhone?.message}</p>
+            <FormField
+              control={form.control}
+              name="customerPhone"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>WhatsApp</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="(00) 00000-0000" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
+            />
           </TabsContent>
 
           <TabsContent value="delivery" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="customerName">Nome do Cliente</Label>
-              <Input 
-                id="customerName" 
-                placeholder="Nome completo"
-                {...form.register("customerName", { shouldUnregister: true })}
-              />
-              {orderType === "delivery" && form.formState.errors.customerName && (
-                <p className="text-sm text-red-500">{form.formState.errors.customerName?.message}</p>
+            <FormField
+              control={form.control}
+              name="customerName"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>Nome do Cliente</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Nome completo" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="customerPhone">WhatsApp</Label>
-              <Input 
-                id="customerPhone" 
-                placeholder="(00) 00000-0000"
-                {...form.register("customerPhone", { shouldUnregister: true })}
-              />
-              {orderType === "delivery" && form.formState.errors.customerPhone && (
-                <p className="text-sm text-red-500">{form.formState.errors.customerPhone?.message}</p>
+            <FormField
+              control={form.control}
+              name="customerPhone"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>WhatsApp</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="(00) 00000-0000" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="address">Endereço Completo</Label>
-              <Textarea 
-                id="address" 
-                placeholder="Rua, número, bairro, cidade"
-                {...form.register("address", { shouldUnregister: true })}
-              />
-              {orderType === "delivery" && form.formState.errors.address && (
-                <p className="text-sm text-red-500">{form.formState.errors.address?.message}</p>
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>Endereço Completo</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Rua, número, bairro, cidade" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="reference">Ponto de Referência (opcional)</Label>
-              <Input 
-                id="reference" 
-                placeholder="Próximo a..."
-                {...form.register("reference", { shouldUnregister: true })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="deliveryFee">Taxa de Entrega (R$)</Label>
-              <Input 
-                id="deliveryFee" 
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                {...form.register("deliveryFee", { shouldUnregister: true, valueAsNumber: true })}
-              />
-              {orderType === "delivery" && form.formState.errors.deliveryFee && (
-                <p className="text-sm text-red-500">{form.formState.errors.deliveryFee?.message}</p>
+            <FormField
+              control={form.control}
+              name="reference"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>Ponto de Referência (opcional)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Próximo a..." 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
+            />
+
+            <FormField
+              control={form.control}
+              name="deliveryFee"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>Taxa de Entrega (R$)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </TabsContent>
 
           {/* Common fields for all order types */}
           <div className="space-y-2 pt-4 border-t border-gray-200">
-            <Label htmlFor="items">Itens do Pedido</Label>
-            <Textarea 
-              id="items" 
-              placeholder="Lista de itens (opcionalmente, você pode adicionar itens posteriormente)"
-              {...form.register("items")}
-              rows={4}
+            <FormField
+              control={form.control}
+              name="items"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>Itens do Pedido</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Lista de itens (opcionalmente, você pode adicionar itens posteriormente)"
+                      rows={4}
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
 
