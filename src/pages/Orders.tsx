@@ -4,9 +4,13 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { toast } from "@/components/ui/sonner"
+import { NewOrderForm } from "@/components/forms/NewOrderForm"
 
 const Orders = () => {
   const [selectedStatus, setSelectedStatus] = useState("Todos")
+  const [isNewOrderDialogOpen, setIsNewOrderDialogOpen] = useState(false)
 
   const orders = [
     {
@@ -62,13 +66,22 @@ const Orders = () => {
   const filteredOrders = selectedStatus === "Todos" 
     ? orders 
     : orders.filter(order => order.status === selectedStatus)
+    
+  const handleNewOrder = (orderData: any) => {
+    console.log("Novo pedido criado:", orderData)
+    toast.success("Pedido criado com sucesso!")
+    setIsNewOrderDialogOpen(false)
+  }
 
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold text-gray-800">Pedidos</h2>
-          <Button className="bg-gradient-primary hover:bg-primary-700 text-white shadow-lg">
+          <Button 
+            className="bg-gradient-primary hover:bg-primary-700 text-white shadow-lg"
+            onClick={() => setIsNewOrderDialogOpen(true)}
+          >
             Novo Pedido
           </Button>
         </div>
@@ -152,6 +165,16 @@ const Orders = () => {
           ))}
         </div>
       </div>
+
+      {/* New Order Dialog */}
+      <Dialog open={isNewOrderDialogOpen} onOpenChange={setIsNewOrderDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Novo Pedido</DialogTitle>
+          </DialogHeader>
+          <NewOrderForm onSubmit={handleNewOrder} />
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   )
 }
