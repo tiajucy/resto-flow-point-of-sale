@@ -161,7 +161,7 @@ const Orders = () => {
                   <div>
                     <h4 className="font-medium text-gray-700 mb-2">Itens:</h4>
                     <ul className="space-y-2">
-                      {order.items.map((item, index) => (
+                      {order.items && order.items.map((item, index) => (
                         <li key={index} className="flex items-center gap-2">
                           <Checkbox 
                             id={`order-${order.id}-item-${index}`}

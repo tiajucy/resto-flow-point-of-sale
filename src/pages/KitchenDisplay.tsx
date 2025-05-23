@@ -27,11 +27,9 @@ const KitchenDisplay = () => {
     toast.info(`Mais tempo solicitado para o pedido ${orderId}`);
   }
   
-  const handleToggleItemPrepared = (orderId: string, itemIndex: number, prepared: boolean) => {
+  const handleToggleItemPrepared = (orderId: string, itemIndex: number) => {
     toggleItemPrepared(orderId, itemIndex);
-    
-    const actionText = prepared ? "desmarcado" : "marcado";
-    toast.info(`Item ${itemIndex + 1} ${actionText} como preparado`);
+    toast.info(`Status de preparo do item atualizado`);
   }
 
   return (
@@ -81,13 +79,13 @@ const KitchenDisplay = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
                             <Checkbox 
-                              id={`${order.id}-item-${index}`} 
+                              id={`${order.id}-${index}`} 
                               checked={item.prepared}
-                              onCheckedChange={() => handleToggleItemPrepared(order.id, index, item.prepared)}
+                              onCheckedChange={() => handleToggleItemPrepared(order.id, index)}
                               className="border-2 border-gray-400"
                             />
                             <label 
-                              htmlFor={`${order.id}-item-${index}`} 
+                              htmlFor={`${order.id}-${index}`} 
                               className={`font-medium text-gray-900 ${item.prepared ? 'line-through text-gray-500' : ''}`}
                             >
                               {item.quantity}x {item.name}

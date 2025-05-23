@@ -57,7 +57,7 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       total: 63.80
     },
     {
-      id: "#004",
+      id: "#002",
       customer: "Mesa 3", 
       items: [
         { name: "Pizza Calabresa", quantity: 3, notes: "Borda recheada", price: 38.00, prepared: false }
@@ -69,7 +69,7 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       total: 114.00
     },
     {
-      id: "#005",
+      id: "#003",
       customer: "Balcão",
       items: [
         { name: "Hambúrguer Simples", quantity: 1, notes: "", price: 18.90, prepared: false },
@@ -118,16 +118,24 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
     );
   };
   
-  // Toggle item preparation status
+  // Toggle item preparation status - FIX THE BUG HERE
   const toggleItemPrepared = (orderId: string, itemIndex: number) => {
     setOrders(
       orders.map(order => {
         if (order.id === orderId) {
+          // Make a copy of the items array
           const updatedItems = [...order.items];
-          updatedItems[itemIndex] = {
-            ...updatedItems[itemIndex],
-            prepared: !updatedItems[itemIndex].prepared
-          };
+          
+          // Check if the item index is valid
+          if (itemIndex >= 0 && itemIndex < updatedItems.length) {
+            // Toggle the prepared status of the specified item
+            updatedItems[itemIndex] = {
+              ...updatedItems[itemIndex],
+              prepared: !updatedItems[itemIndex].prepared
+            };
+          }
+          
+          // Return the updated order
           return { ...order, items: updatedItems };
         }
         return order;
