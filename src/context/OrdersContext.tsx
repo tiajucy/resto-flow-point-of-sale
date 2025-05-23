@@ -6,7 +6,8 @@ export interface OrderItem {
   name: string;
   quantity: number;
   notes: string;
-  price?: number; // Adicionando o preço do item
+  price?: number;
+  prepared: boolean; // Add prepared field to track item preparation status
 }
 
 // Define the order interface
@@ -18,7 +19,7 @@ export interface Order {
   time: string;
   elapsedTime: string;
   priority: "Normal" | "Urgente";
-  total: number; // Adicionando o campo total ao pedido
+  total: number;
 }
 
 // Context interface
@@ -27,6 +28,7 @@ interface OrdersContextType {
   kitchenOrders: Order[];
   addOrder: (order: Omit<Order, "id" | "elapsedTime" | "priority">) => void;
   updateOrderStatus: (id: string, status: Order["status"]) => void;
+  toggleItemPrepared: (orderId: string, itemIndex: number) => void; // Add new function
 }
 
 // Create context with default values
@@ -35,6 +37,7 @@ const OrdersContext = createContext<OrdersContextType>({
   kitchenOrders: [],
   addOrder: () => {},
   updateOrderStatus: () => {},
+  toggleItemPrepared: () => {}, // Add to default context
 });
 
 // Provider component
@@ -44,8 +47,8 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       id: "#001",
       customer: "Mesa 5",
       items: [
-        { name: "Hambúrguer Artesanal", quantity: 2, notes: "Sem cebola", price: 25.90 },
-        { name: "Batata Frita", quantity: 1, notes: "", price: 12.00 }
+        { name: "Hambúrguer Artesanal", quantity: 2, notes: "Sem cebola", price: 25.90, prepared: false },
+        { name: "Batata Frita", quantity: 1, notes: "", price: 12.00, prepared: false }
       ],
       status: "Em preparo",
       time: "14:30",
@@ -57,7 +60,7 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       id: "#004",
       customer: "Mesa 3", 
       items: [
-        { name: "Pizza Calabresa", quantity: 3, notes: "Borda recheada", price: 38.00 }
+        { name: "Pizza Calabresa", quantity: 3, notes: "Borda recheada", price: 38.00, prepared: false }
       ],
       status: "Aguardando",
       time: "14:35",
@@ -69,8 +72,8 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       id: "#005",
       customer: "Balcão",
       items: [
-        { name: "Hambúrguer Simples", quantity: 1, notes: "", price: 18.90 },
-        { name: "Refrigerante", quantity: 1, notes: "Gelado", price: 5.00 }
+        { name: "Hambúrguer Simples", quantity: 1, notes: "", price: 18.90, prepared: false },
+        { name: "Refrigerante", quantity: 1, notes: "Gelado", price: 5.00, prepared: true }
       ],
       status: "Em preparo",
       time: "14:40",
@@ -89,9 +92,16 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
   const addOrder = (orderData: Omit<Order, "id" | "elapsedTime" | "priority">) => {
     const orderId = `#${String(orders.length + 1).padStart(3, '0')}`;
     
+    // Add prepared: false to each item
+    const itemsWithPreparation = orderData.items.map(item => ({
+      ...item,
+      prepared: false
+    }));
+    
     const newOrder: Order = {
       id: orderId,
       ...orderData,
+      items: itemsWithPreparation,
       elapsedTime: "0 min",
       priority: "Normal"
     };
@@ -107,6 +117,23 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       )
     );
   };
+  
+  // Toggle item preparation status
+  const toggleItemPrepared = (orderId: string, itemIndex: number) => {
+    setOrders(
+      orders.map(order => {
+        if (order.id === orderId) {
+          const updatedItems = [...order.items];
+          updatedItems[itemIndex] = {
+            ...updatedItems[itemIndex],
+            prepared: !updatedItems[itemIndex].prepared
+          };
+          return { ...order, items: updatedItems };
+        }
+        return order;
+      })
+    );
+  };
 
   return (
     <OrdersContext.Provider 
@@ -114,7 +141,8 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
         orders, 
         kitchenOrders,
         addOrder, 
-        updateOrderStatus 
+        updateOrderStatus,
+        toggleItemPrepared 
       }}
     >
       {children}

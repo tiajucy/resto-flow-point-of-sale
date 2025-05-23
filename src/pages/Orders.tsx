@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,13 +9,14 @@ import { NewOrderForm } from "@/components/forms/NewOrderForm"
 import { POSInterface } from "@/components/pos/POSInterface"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { useOrders, Order, OrderItem } from "@/context/OrdersContext"
+import { Checkbox } from "@/components/ui/checkbox"
 
 const Orders = () => {
   const [selectedStatus, setSelectedStatus] = useState("Todos")
   const [isNewOrderDialogOpen, setIsNewOrderDialogOpen] = useState(false)
   const [isPOSOpen, setIsPOSOpen] = useState(false)
   const [currentOrderType, setCurrentOrderType] = useState<"mesa" | "retirada" | "delivery" | null>(null)
-  const { orders, addOrder, updateOrderStatus } = useOrders();
+  const { orders, addOrder, updateOrderStatus, toggleItemPrepared } = useOrders();
 
   const statusOptions = ["Todos", "Aguardando", "Em preparo", "Pronto", "Entregue"]
 
@@ -58,9 +58,9 @@ const Orders = () => {
             const quantity = parseInt(match[1]);
             const name = match[2].trim();
             const notes = match[3] ? match[3].trim() : '';
-            return { name, quantity, notes };
+            return { name, quantity, notes, prepared: false };
           }
-          return { name: item, quantity: 1, notes: '' };
+          return { name: item, quantity: 1, notes: '', prepared: false };
         });
       } else if (orderData.itemDetails && Array.isArray(orderData.itemDetails)) {
         // Use detailed items if available
@@ -68,7 +68,8 @@ const Orders = () => {
           name: item.name,
           quantity: item.quantity,
           notes: item.notes || '',
-          price: item.price || 0, // Adiciona o preço do item
+          price: item.price || 0,
+          prepared: false
         }));
       }
     }
@@ -81,10 +82,10 @@ const Orders = () => {
     
     addOrder({
       customer: customerDisplay,
-      items: parsedItems.length > 0 ? parsedItems : [{ name: "Itens não especificados", quantity: 1, notes: "" }],
+      items: parsedItems.length > 0 ? parsedItems : [{ name: "Itens não especificados", quantity: 1, notes: "", prepared: false }],
       status: "Aguardando",
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      total: total, // Adicionar o total
+      total: total,
     });
     
     toast.success("Pedido criado com sucesso!");
@@ -100,6 +101,10 @@ const Orders = () => {
   const handleStatusUpdate = (orderId: string, newStatus: Order["status"]) => {
     updateOrderStatus(orderId, newStatus);
     toast.success(`Status do pedido ${orderId} atualizado para ${newStatus}`);
+  }
+  
+  const handleToggleItemPrepared = (orderId: string, itemIndex: number) => {
+    toggleItemPrepared(orderId, itemIndex);
   }
 
   return (
@@ -137,11 +142,6 @@ const Orders = () => {
         {/* Orders List */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredOrders.map((order) => {
-            // Format items for display on the card
-            const displayItems = order.items.map(item => 
-              `${item.quantity}x ${item.name}${item.notes ? ` (${item.notes})` : ''}`
-            );
-            
             return (
               <Card key={order.id} className="bg-white shadow-lg hover:shadow-xl transition-all duration-300">
                 <CardHeader className="pb-3">
@@ -159,9 +159,24 @@ const Orders = () => {
                 <CardContent className="space-y-4">
                   <div>
                     <h4 className="font-medium text-gray-700 mb-2">Itens:</h4>
-                    <ul className="space-y-1">
-                      {displayItems.map((item, index) => (
-                        <li key={index} className="text-sm text-gray-600">• {item}</li>
+                    <ul className="space-y-2">
+                      {order.items.map((item, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <Checkbox 
+                            id={`order-${order.id}-item-${index}`}
+                            checked={item.prepared}
+                            onCheckedChange={() => handleToggleItemPrepared(order.id, index)}
+                            className="border-2 border-gray-400"
+                            disabled={!["Aguardando", "Em preparo"].includes(order.status)}
+                          />
+                          <label 
+                            htmlFor={`order-${order.id}-item-${index}`}
+                            className={`text-sm text-gray-600 ${item.prepared ? 'line-through text-gray-400' : ''}`}
+                          >
+                            {item.quantity}x {item.name}
+                            {item.notes ? ` (${item.notes})` : ''}
+                          </label>
+                        </li>
                       ))}
                     </ul>
                   </div>

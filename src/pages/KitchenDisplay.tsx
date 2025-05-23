@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useOrders } from "@/context/OrdersContext"
 import { toast } from "@/components/ui/sonner"
+import { Checkbox } from "@/components/ui/checkbox"
 
 const KitchenDisplay = () => {
-  const { kitchenOrders, updateOrderStatus } = useOrders();
+  const { kitchenOrders, updateOrderStatus, toggleItemPrepared } = useOrders();
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -24,6 +25,13 @@ const KitchenDisplay = () => {
 
   const handleMoreTime = (orderId: string) => {
     toast.info(`Mais tempo solicitado para o pedido ${orderId}`);
+  }
+  
+  const handleToggleItemPrepared = (orderId: string, itemIndex: number, prepared: boolean) => {
+    toggleItemPrepared(orderId, itemIndex);
+    
+    const actionText = prepared ? "desmarcado" : "marcado";
+    toast.info(`Item ${itemIndex + 1} ${actionText} como preparado`);
   }
 
   return (
@@ -71,12 +79,23 @@ const KitchenDisplay = () => {
                     {order.items.map((item, index) => (
                       <div key={index} className="bg-gray-50 p-3 rounded-lg">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium text-gray-900">
-                            {item.quantity}x {item.name}
-                          </span>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`${order.id}-item-${index}`} 
+                              checked={item.prepared}
+                              onCheckedChange={() => handleToggleItemPrepared(order.id, index, item.prepared)}
+                              className="border-2 border-gray-400"
+                            />
+                            <label 
+                              htmlFor={`${order.id}-item-${index}`} 
+                              className={`font-medium text-gray-900 ${item.prepared ? 'line-through text-gray-500' : ''}`}
+                            >
+                              {item.quantity}x {item.name}
+                            </label>
+                          </div>
                         </div>
                         {item.notes && (
-                          <p className="text-sm text-orange-600 mt-1 font-medium">
+                          <p className="text-sm text-orange-600 mt-1 font-medium ml-6">
                             Obs: {item.notes}
                           </p>
                         )}
