@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, ReactNode, useEffect, useState } from "react";
 import { API_ROUTES } from "./apiRoutes";
-import { ProductsHandler, InventoryHandler, OrdersHandler, initializeApiData } from "./apiHandlers";
+import { ProductsHandler, InventoryHandler, OrdersHandler, EstablishmentsHandler, PlansHandler, initializeApiData } from "./apiHandlers";
 import { useProducts } from "../context/ProductContext";
 import { useOrders } from "../context/OrdersContext";
 
@@ -96,6 +96,40 @@ export const ApiMiddlewareProvider: React.FC<{ children: ReactNode }> = ({ child
           response = OrdersHandler.create(body);
         } else if (url === API_ROUTES.orders.kitchen) {
           response = OrdersHandler.getKitchenOrders();
+        }
+        
+        // Plans endpoints
+        else if (url === API_ROUTES.plans.getAll) {
+          response = PlansHandler.getAll();
+        } else if (url.match(/^\/api\/plans\/\d+$/)) {
+          const planId = parseInt(url.split('/').pop() || '0');
+          response = PlansHandler.getById(planId);
+        }
+        
+        // Establishments endpoints
+        else if (url.match(/^\/api\/establishments\/[\w-]+\/payments$/)) {
+          const establishmentId = url.split('/')[3];
+          response = EstablishmentsHandler.getPaymentHistory(establishmentId);
+        } else if (url.match(/^\/api\/establishments\/[\w-]+\/current-plan$/)) {
+          const establishmentId = url.split('/')[3];
+          response = EstablishmentsHandler.getCurrentPlan(establishmentId);
+        } else if (url.match(/^\/api\/establishments\/[\w-]+\/update-plan$/) && method === 'PATCH') {
+          const establishmentId = url.split('/')[3];
+          response = EstablishmentsHandler.updatePlan(establishmentId, body.planId);
+        } else if (url.match(/^\/api\/establishments\/[\w-]+\/toggle-status$/) && method === 'PATCH') {
+          const establishmentId = url.split('/')[3];
+          response = EstablishmentsHandler.toggleStatus(establishmentId);
+        } else if (url.match(/^\/api\/establishments\/[\w-]+$/)) {
+          const establishmentId = url.split('/')[3];
+          if (method === 'GET') {
+            response = EstablishmentsHandler.getById(establishmentId);
+          } else if (method === 'PUT') {
+            response = EstablishmentsHandler.update(body);
+          }
+        } else if (url === API_ROUTES.establishments.getAll) {
+          response = EstablishmentsHandler.getAll();
+        } else if (url === API_ROUTES.establishments.create && method === 'POST') {
+          response = EstablishmentsHandler.create(body);
         }
         
         // If no handler matched

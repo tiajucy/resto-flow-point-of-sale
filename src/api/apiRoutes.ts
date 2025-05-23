@@ -43,5 +43,13 @@ export const API_ROUTES = {
     update: (id: string | number) => `${API_BASE_URL}/establishments/${id}`,
     toggleStatus: (id: string | number) => `${API_BASE_URL}/establishments/${id}/toggle-status`,
     getPaymentHistory: (id: string | number) => `${API_BASE_URL}/establishments/${id}/payments`,
+    getCurrentPlan: (id: string | number) => `${API_BASE_URL}/establishments/${id}/current-plan`,
+    updatePlan: (id: string | number) => `${API_BASE_URL}/establishments/${id}/update-plan`,
+  },
+  
+  // Plans
+  plans: {
+    getAll: `${API_BASE_URL}/plans`,
+    getById: (id: string | number) => `${API_BASE_URL}/plans/${id}`,
   }
 };

@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
+import { ChevronRight } from "lucide-react"
+import { Link } from "react-router-dom"
 
 // Define types for our settings
 interface EstablishmentSettings {
@@ -128,7 +130,15 @@ const Settings = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
-        <h2 className="text-3xl font-bold text-gray-800">Configurações</h2>
+        <div className="flex justify-between items-center">
+          <h2 className="text-3xl font-bold text-gray-800">Configurações</h2>
+          <Link to="/establishment-plans">
+            <Button variant="outline" className="flex items-center gap-2">
+              Gerenciar Plano
+              <ChevronRight size={16} />
+            </Button>
+          </Link>
+        </div>
 
         <Tabs defaultValue="establishment" className="w-full">
           <TabsList className="grid w-full grid-cols-4">

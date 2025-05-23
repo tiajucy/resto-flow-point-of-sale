@@ -1,4 +1,3 @@
-
 import { API_ROUTES } from "./apiRoutes";
 import { Product, InventoryTransaction } from "../context/ProductContext";
 import { Order, OrderItem } from "../context/OrdersContext";
@@ -132,6 +131,86 @@ export const OrdersAPI = {
     const response = await fetch(API_ROUTES.orders.toggleItemPrepared(orderId, itemIndex), {
       method: "PATCH",
     });
+    return handleResponse(response);
+  },
+};
+
+// Plans API
+export const PlansAPI = {
+  // Get all plans
+  getAll: async () => {
+    const response = await fetch(API_ROUTES.plans.getAll);
+    return handleResponse(response);
+  },
+
+  // Get plan by ID
+  getById: async (id: number | string) => {
+    const response = await fetch(API_ROUTES.plans.getById(id));
+    return handleResponse(response);
+  },
+};
+
+// Establishments API
+export const EstablishmentsAPI = {
+  // Get all establishments
+  getAll: async () => {
+    const response = await fetch(API_ROUTES.establishments.getAll);
+    return handleResponse(response);
+  },
+
+  // Get establishment by ID
+  getById: async (id: string | number) => {
+    const response = await fetch(API_ROUTES.establishments.getById(id));
+    return handleResponse(response);
+  },
+
+  // Create new establishment
+  create: async (establishmentData: any) => {
+    const response = await fetch(API_ROUTES.establishments.create, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(establishmentData),
+    });
+    return handleResponse(response);
+  },
+
+  // Update establishment
+  update: async (establishment: any) => {
+    const response = await fetch(API_ROUTES.establishments.update(establishment.id), {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(establishment),
+    });
+    return handleResponse(response);
+  },
+
+  // Toggle establishment status
+  toggleStatus: async (id: string | number) => {
+    const response = await fetch(API_ROUTES.establishments.toggleStatus(id), {
+      method: "PATCH",
+    });
+    return handleResponse(response);
+  },
+
+  // Get current plan
+  getCurrentPlan: async (id: string | number) => {
+    const response = await fetch(API_ROUTES.establishments.getCurrentPlan(id));
+    return handleResponse(response);
+  },
+
+  // Update plan
+  updatePlan: async (id: string | number, planId: number) => {
+    const response = await fetch(API_ROUTES.establishments.updatePlan(id), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ planId }),
+    });
+    return handleResponse(response);
+  },
+
+  // Get payment history
+  getPaymentHistory: async (id: string | number) => {
+    const response = await fetch(API_ROUTES.establishments.getPaymentHistory(id));
     return handleResponse(response);
   },
 };

@@ -1,4 +1,3 @@
-
 import { Product, InventoryTransaction } from "../context/ProductContext";
 import { Order, OrderItem } from "../context/OrdersContext";
 
@@ -15,6 +14,90 @@ let inventoryTransactions: InventoryTransaction[] = [];
 let orders: Order[] = [];
 let establishments: any[] = [];
 
+// Define plans and payment history
+let plans = [
+  {
+    id: 1,
+    name: "Básico",
+    price: 49.90,
+    period: "mês",
+    features: [
+      "Até 100 produtos",
+      "1 terminal PDV",
+      "Relatórios básicos",
+      "Suporte por email"
+    ]
+  },
+  {
+    id: 2,
+    name: "Profissional",
+    price: 99.90,
+    period: "mês",
+    features: [
+      "Produtos ilimitados",
+      "3 terminais PDV",
+      "KDS completo",
+      "Relatórios avançados",
+      "Suporte prioritário",
+      "Integração com delivery"
+    ],
+    popular: true
+  },
+  {
+    id: 3,
+    name: "Enterprise",
+    price: 199.90,
+    period: "mês",
+    features: [
+      "Tudo do Profissional",
+      "Terminais ilimitados",
+      "Multi-estabelecimentos",
+      "API personalizada",
+      "Suporte 24/7",
+      "Consultoria gratuita"
+    ]
+  }
+];
+
+let paymentHistory = [
+  {
+    id: 1,
+    establishmentId: 'est-001',
+    planId: 2,
+    planName: "Profissional",
+    amount: 99.90,
+    status: "Pago",
+    paymentMethod: "Cartão de crédito",
+    date: "2023-12-15",
+    invoiceUrl: "#",
+    period: "15/12/2023 - 14/01/2024"
+  },
+  {
+    id: 2,
+    establishmentId: 'est-001',
+    planId: 2,
+    planName: "Profissional",
+    amount: 99.90,
+    status: "Pago",
+    paymentMethod: "Cartão de crédito",
+    date: "2024-01-15",
+    invoiceUrl: "#",
+    period: "15/01/2024 - 14/02/2024"
+  },
+  {
+    id: 3,
+    establishmentId: 'est-001',
+    planId: 3,
+    planName: "Enterprise",
+    amount: 199.90,
+    status: "Processando",
+    paymentMethod: "Cartão de crédito",
+    date: "2024-02-15",
+    invoiceUrl: "#",
+    period: "15/02/2024 - 14/03/2024"
+  }
+];
+
 // Initialize with sample data
 const initializeApiData = (
   initialProducts: Product[], 
@@ -24,6 +107,17 @@ const initializeApiData = (
   products = initialProducts;
   inventoryTransactions = initialInventory;
   orders = initialOrders;
+  
+  // Initialize a sample establishment with plan
+  if (establishments.length === 0) {
+    establishments.push({
+      id: 'est-001',
+      name: "Restaurante São Paulo",
+      currentPlanId: 2,
+      status: "active",
+      createdAt: "2023-10-01"
+    });
+  }
 };
 
 // Products Handler
@@ -158,7 +252,19 @@ export const OrdersHandler = {
   },
 };
 
-// New Establishments Handler
+// New Plans Handler
+export const PlansHandler = {
+  getAll: () => [...plans],
+  
+  getById: (id: number | string) => {
+    const numId = typeof id === 'string' ? parseInt(id) : id;
+    const plan = plans.find(p => p.id === numId);
+    if (!plan) throw new Error(`Plan with ID ${id} not found`);
+    return plan;
+  },
+};
+
+// Expanded Establishments Handler
 export const EstablishmentsHandler = {
   getAll: () => [...establishments],
   
@@ -197,14 +303,53 @@ export const EstablishmentsHandler = {
     return establishment;
   },
   
-  getPaymentHistory: (id: string | number) => {
+  getCurrentPlan: (id: string | number) => {
     const establishment = establishments.find(e => e.id === id);
     if (!establishment) throw new Error(`Establishment with ID ${id} not found`);
     
-    // Here we would fetch payment history from a real database
-    // For now, return empty array as sample
-    return [];
+    const plan = plans.find(p => p.id === establishment.currentPlanId);
+    if (!plan) throw new Error(`Plan with ID ${establishment.currentPlanId} not found for establishment ${id}`);
+    
+    return {
+      ...plan,
+      nextPaymentDate: "2023-03-15",
+      renewalType: "Automática"
+    };
+  },
+  
+  updatePlan: (id: string | number, planId: number) => {
+    const establishment = establishments.find(e => e.id === id);
+    if (!establishment) throw new Error(`Establishment with ID ${id} not found`);
+    
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) throw new Error(`Plan with ID ${planId} not found`);
+    
+    establishment.currentPlanId = planId;
+    
+    const today = new Date();
+    const paymentDate = today.toISOString().split('T')[0];
+    
+    const newPayment = {
+      id: paymentHistory.length + 1,
+      establishmentId: id,
+      planId: planId,
+      planName: plan.name,
+      amount: plan.price,
+      status: "Processando",
+      paymentMethod: "Cartão de crédito",
+      date: paymentDate,
+      invoiceUrl: "#",
+      period: `${paymentDate} - ${new Date(today.setMonth(today.getMonth() + 1)).toISOString().split('T')[0]}`
+    };
+    
+    paymentHistory.push(newPayment);
+    
+    return establishment;
+  },
+  
+  getPaymentHistory: (id: string | number) => {
+    return paymentHistory.filter(payment => payment.establishmentId === id);
   },
 };
 
-export { initializeApiData, establishments };
+export { initializeApiData, establishments, plans, paymentHistory };
