@@ -1,4 +1,3 @@
-
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -609,7 +608,7 @@ const ApiDocs = () => {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => copyToClipboard(`${window.location.origin}${API_ROUTES.orders.getById('#001')}`)}
+                          onClick={() => copyToClipboard(`${window.location.origin}${API_ROUTES.orders.getById("#001")}`)}
                         >
                           <Copy size={16} className="mr-1" /> Copiar URL
                         </Button>
@@ -738,7 +737,7 @@ const ApiDocs = () => {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => copyToClipboard(`${window.location.origin}${API_ROUTES.orders.updateStatus('#001')}`)}
+                          onClick={() => copyToClipboard(`${window.location.origin}${API_ROUTES.orders.updateStatus("#001")}`)}
                         >
                           <Copy size={16} className="mr-1" /> Copiar URL
                         </Button>
@@ -844,7 +843,7 @@ const ApiDocs = () => {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => copyToClipboard(`${window.location.origin}${API_ROUTES.orders.toggleItemPrepared('#001', 0)}`)}
+                          onClick={() => copyToClipboard(`${window.location.origin}${API_ROUTES.orders.toggleItemPrepared("#001", 0)}`)}
                         >
                           <Copy size={16} className="mr-1" /> Copiar URL
                         </Button>

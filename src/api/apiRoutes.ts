@@ -1,12 +1,12 @@
 
-import { Product, InventoryTransaction } from "../context/ProductContext";
-import { Order } from "../context/OrdersContext";
-
 // Base URL for API
 export const API_BASE_URL = "/api";
 
 // API endpoints
 export const API_ROUTES = {
+  // Base URL
+  API_BASE_URL, // Add this line to expose the base URL in the object
+  
   // Products
   products: {
     getAll: `${API_BASE_URL}/products`,
