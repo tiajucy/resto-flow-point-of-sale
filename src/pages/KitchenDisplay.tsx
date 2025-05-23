@@ -3,42 +3,11 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { useOrders } from "@/context/OrdersContext"
+import { toast } from "@/components/ui/sonner"
 
 const KitchenDisplay = () => {
-  const kitchenOrders = [
-    {
-      id: "#001",
-      customer: "Mesa 5",
-      items: [
-        { name: "Hambúrguer Artesanal", quantity: 2, notes: "Sem cebola" },
-        { name: "Batata Frita", quantity: 1, notes: "" }
-      ],
-      time: "14:30",
-      priority: "Normal",
-      elapsedTime: "5 min"
-    },
-    {
-      id: "#004",
-      customer: "Mesa 3", 
-      items: [
-        { name: "Pizza Calabresa", quantity: 3, notes: "Borda recheada" },
-      ],
-      time: "14:35",
-      priority: "Urgente",
-      elapsedTime: "2 min"
-    },
-    {
-      id: "#005",
-      customer: "Balcão",
-      items: [
-        { name: "Hambúrguer Simples", quantity: 1, notes: "" },
-        { name: "Refrigerante", quantity: 1, notes: "Gelado" }
-      ],
-      time: "14:40",
-      priority: "Normal", 
-      elapsedTime: "1 min"
-    }
-  ]
+  const { kitchenOrders, updateOrderStatus } = useOrders();
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -46,6 +15,15 @@ const KitchenDisplay = () => {
       case "Normal": return "bg-blue-100 text-blue-800 border-blue-200"
       default: return "bg-gray-100 text-gray-800 border-gray-200"
     }
+  }
+
+  const handleOrderReady = (orderId: string) => {
+    updateOrderStatus(orderId, "Pronto");
+    toast.success(`Pedido ${orderId} marcado como pronto!`);
+  }
+
+  const handleMoreTime = (orderId: string) => {
+    toast.info(`Mais tempo solicitado para o pedido ${orderId}`);
   }
 
   return (
@@ -111,6 +89,7 @@ const KitchenDisplay = () => {
                   <Button 
                     size="lg" 
                     className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold"
+                    onClick={() => handleOrderReady(order.id)}
                   >
                     Pronto
                   </Button>
@@ -118,6 +97,7 @@ const KitchenDisplay = () => {
                     variant="outline" 
                     size="lg" 
                     className="flex-1 border-gray-300 hover:bg-gray-50"
+                    onClick={() => handleMoreTime(order.id)}
                   >
                     Mais Tempo
                   </Button>

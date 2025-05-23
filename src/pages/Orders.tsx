@@ -9,50 +9,14 @@ import { toast } from "@/components/ui/sonner"
 import { NewOrderForm } from "@/components/forms/NewOrderForm"
 import { POSInterface } from "@/components/pos/POSInterface"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { useOrders, Order, OrderItem } from "@/context/OrdersContext"
 
 const Orders = () => {
   const [selectedStatus, setSelectedStatus] = useState("Todos")
   const [isNewOrderDialogOpen, setIsNewOrderDialogOpen] = useState(false)
   const [isPOSOpen, setIsPOSOpen] = useState(false)
   const [currentOrderType, setCurrentOrderType] = useState<"mesa" | "retirada" | "delivery" | null>(null)
-  const [orders, setOrders] = useState([
-    {
-      id: "#001",
-      customer: "Mesa 5",
-      items: ["2x Hambúrguer Artesanal", "1x Batata Frita", "2x Refrigerante"],
-      total: 85.50,
-      status: "Em preparo",
-      time: "14:30",
-      estimatedTime: "15 min"
-    },
-    {
-      id: "#002", 
-      customer: "Mesa 12",
-      items: ["1x Pizza Margherita", "1x Refrigerante"],
-      total: 42.00,
-      status: "Pronto",
-      time: "14:25",
-      estimatedTime: "Pronto"
-    },
-    {
-      id: "#003",
-      customer: "Balcão",
-      items: ["1x Hambúrguer Simples", "1x Batata Frita"],
-      total: 28.50,
-      status: "Entregue",
-      time: "14:20",
-      estimatedTime: "Entregue"
-    },
-    {
-      id: "#004",
-      customer: "Mesa 3",
-      items: ["3x Pizza Calabresa", "2x Refrigerante"],
-      total: 96.00,
-      status: "Aguardando",
-      time: "14:35",
-      estimatedTime: "20 min"
-    }
-  ])
+  const { orders, addOrder, updateOrderStatus } = useOrders();
 
   const statusOptions = ["Todos", "Aguardando", "Em preparo", "Pronto", "Entregue"]
 
@@ -71,8 +35,6 @@ const Orders = () => {
     : orders.filter(order => order.status === selectedStatus)
     
   const handleNewOrder = (orderData: any) => {
-    const orderId = `#${String(orders.length + 1).padStart(3, '0')}`;
-    
     // Format the customer information based on order type
     let customerDisplay = '';
     if (orderData.orderType === 'mesa') {
@@ -83,22 +45,40 @@ const Orders = () => {
       customerDisplay = `Delivery - ${orderData.customerName}`;
     }
     
-    // Parse the items array from the POS interface
-    const itemsArray = orderData.items || [];
+    // Transform the items array to match the expected format
+    let parsedItems: OrderItem[] = [];
+    
+    if (Array.isArray(orderData.items)) {
+      if (typeof orderData.items[0] === 'string') {
+        // Handle string array case
+        parsedItems = orderData.items.map((item: string) => {
+          // Parse item strings like "2x Hambúrguer Artesanal"
+          const match = item.match(/(\d+)x (.+?)(?:\((.+?)\))?$/);
+          if (match) {
+            const quantity = parseInt(match[1]);
+            const name = match[2].trim();
+            const notes = match[3] ? match[3].trim() : '';
+            return { name, quantity, notes };
+          }
+          return { name: item, quantity: 1, notes: '' };
+        });
+      } else if (orderData.itemDetails && Array.isArray(orderData.itemDetails)) {
+        // Use detailed items if available
+        parsedItems = orderData.itemDetails.map((item: any) => ({
+          name: item.name,
+          quantity: item.quantity,
+          notes: item.notes || '',
+        }));
+      }
+    }
     
     // Create the new order
-    const newOrder = {
-      id: orderId,
+    addOrder({
       customer: customerDisplay,
-      items: itemsArray.length > 0 ? itemsArray : ["Itens não especificados"],
-      total: orderData.total || 0,
+      items: parsedItems.length > 0 ? parsedItems : [{ name: "Itens não especificados", quantity: 1, notes: "" }],
       status: "Aguardando",
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      estimatedTime: "20 min"
-    };
-    
-    // Update orders state
-    setOrders(prevOrders => [...prevOrders, newOrder]);
+    });
     
     toast.success("Pedido criado com sucesso!");
     setIsNewOrderDialogOpen(false);
@@ -108,6 +88,11 @@ const Orders = () => {
   const openPOS = (orderType: "mesa" | "retirada" | "delivery") => {
     setCurrentOrderType(orderType);
     setIsPOSOpen(true);
+  }
+
+  const handleStatusUpdate = (orderId: string, newStatus: Order["status"]) => {
+    updateOrderStatus(orderId, newStatus);
+    toast.success(`Status do pedido ${orderId} atualizado para ${newStatus}`);
   }
 
   return (
@@ -144,62 +129,84 @@ const Orders = () => {
 
         {/* Orders List */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredOrders.map((order) => (
-            <Card key={order.id} className="bg-white shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold text-gray-800">
-                    {order.id} - {order.customer}
-                  </CardTitle>
-                  <Badge className={`${getStatusColor(order.status)}`}>
-                    {order.status}
-                  </Badge>
-                </div>
-                <p className="text-sm text-gray-600">Pedido às {order.time}</p>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                <div>
-                  <h4 className="font-medium text-gray-700 mb-2">Itens:</h4>
-                  <ul className="space-y-1">
-                    {order.items.map((item, index) => (
-                      <li key={index} className="text-sm text-gray-600">• {item}</li>
-                    ))}
-                  </ul>
-                </div>
+          {filteredOrders.map((order) => {
+            // Format items for display on the card
+            const displayItems = order.items.map(item => 
+              `${item.quantity}x ${item.name}${item.notes ? ` (${item.notes})` : ''}`
+            );
+            
+            // Calculate total (placeholder for now)
+            const orderTotal = 0;
+            
+            return (
+              <Card key={order.id} className="bg-white shadow-lg hover:shadow-xl transition-all duration-300">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-semibold text-gray-800">
+                      {order.id} - {order.customer}
+                    </CardTitle>
+                    <Badge className={`${getStatusColor(order.status)}`}>
+                      {order.status}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-600">Pedido às {order.time}</p>
+                </CardHeader>
                 
-                <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-                  <span className="text-xl font-bold text-primary-600">
-                    R$ {order.total.toFixed(2)}
-                  </span>
-                  <span className="text-sm font-medium text-gray-700">
-                    {order.estimatedTime}
-                  </span>
-                </div>
-                
-                <div className="flex gap-2 pt-2">
-                  {order.status === "Aguardando" && (
-                    <Button size="sm" className="flex-1 bg-yellow-500 hover:bg-yellow-600">
-                      Iniciar Preparo
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-gray-700 mb-2">Itens:</h4>
+                    <ul className="space-y-1">
+                      {displayItems.map((item, index) => (
+                        <li key={index} className="text-sm text-gray-600">• {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                    <span className="text-xl font-bold text-primary-600">
+                      R$ {orderTotal.toFixed(2)}
+                    </span>
+                    <span className="text-sm font-medium text-gray-700">
+                      {order.elapsedTime}
+                    </span>
+                  </div>
+                  
+                  <div className="flex gap-2 pt-2">
+                    {order.status === "Aguardando" && (
+                      <Button 
+                        size="sm" 
+                        className="flex-1 bg-yellow-500 hover:bg-yellow-600"
+                        onClick={() => handleStatusUpdate(order.id, "Em preparo")}
+                      >
+                        Iniciar Preparo
+                      </Button>
+                    )}
+                    {order.status === "Em preparo" && (
+                      <Button 
+                        size="sm" 
+                        className="flex-1 bg-green-500 hover:bg-green-600"
+                        onClick={() => handleStatusUpdate(order.id, "Pronto")}
+                      >
+                        Marcar Pronto
+                      </Button>
+                    )}
+                    {order.status === "Pronto" && (
+                      <Button 
+                        size="sm" 
+                        className="flex-1 bg-blue-500 hover:bg-blue-600"
+                        onClick={() => handleStatusUpdate(order.id, "Entregue")}
+                      >
+                        Entregar
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" className="flex-1">
+                      Detalhes
                     </Button>
-                  )}
-                  {order.status === "Em preparo" && (
-                    <Button size="sm" className="flex-1 bg-green-500 hover:bg-green-600">
-                      Marcar Pronto
-                    </Button>
-                  )}
-                  {order.status === "Pronto" && (
-                    <Button size="sm" className="flex-1 bg-blue-500 hover:bg-blue-600">
-                      Entregar
-                    </Button>
-                  )}
-                  <Button variant="outline" size="sm" className="flex-1">
-                    Detalhes
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
 
