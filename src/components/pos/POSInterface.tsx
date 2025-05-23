@@ -50,13 +50,13 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
 
   const handleAddItem = (product: any, quantity: number, notes: string) => {
     const newItem: OrderItem = {
-      id: Date.now(),
+      id: Date.now(), // Using timestamp as unique ID
       productId: product.id,
       name: product.name,
       price: product.price,
       quantity: quantity,
       notes: notes,
-      prepared: false // Add the missing 'prepared' field
+      prepared: false // Add the prepared property
     };
     setOrderItems([...orderItems, newItem]);
   };
@@ -75,7 +75,7 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
 
   const calculateTotal = () => {
     const itemsTotal = orderItems.reduce(
-      (sum, item) => sum + item.price * item.quantity, 
+      (sum, item) => sum + (item.price || 0) * item.quantity, 
       0
     );
     return orderType === "delivery" ? itemsTotal + deliveryFee : itemsTotal;

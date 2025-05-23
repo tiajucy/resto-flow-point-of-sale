@@ -1,15 +1,15 @@
-
 import { createContext, useState, useContext, ReactNode } from "react";
 import { useProducts } from "./ProductContext";
 
 // Define the order item interface
 export interface OrderItem {
+  id: number; // Add id field as it's required by POSInterface
   name: string;
   quantity: number;
   notes: string;
   price?: number;
-  prepared: boolean; // Add prepared field to track item preparation status
-  productId?: number; // Add productId to track inventory
+  prepared: boolean;
+  productId?: number;
 }
 
 // Define the order interface
@@ -59,8 +59,8 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       id: "#001",
       customer: "Mesa 5",
       items: [
-        { name: "Hambúrguer Artesanal", quantity: 2, notes: "Sem cebola", price: 25.90, prepared: false },
-        { name: "Batata Frita", quantity: 1, notes: "", price: 12.00, prepared: false }
+        { id: 1, name: "Hambúrguer Artesanal", quantity: 2, notes: "Sem cebola", price: 25.90, prepared: false },
+        { id: 2, name: "Batata Frita", quantity: 1, notes: "", price: 12.00, prepared: false }
       ],
       status: "Em preparo",
       time: "14:30",
@@ -72,7 +72,7 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       id: "#002",
       customer: "Mesa 3", 
       items: [
-        { name: "Pizza Calabresa", quantity: 3, notes: "Borda recheada", price: 38.00, prepared: false }
+        { id: 3, name: "Pizza Calabresa", quantity: 3, notes: "Borda recheada", price: 38.00, prepared: false }
       ],
       status: "Aguardando",
       time: "14:35",
@@ -84,8 +84,8 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       id: "#003",
       customer: "Balcão",
       items: [
-        { name: "Hambúrguer Simples", quantity: 1, notes: "", price: 18.90, prepared: false },
-        { name: "Refrigerante", quantity: 1, notes: "Gelado", price: 5.00, prepared: true }
+        { id: 4, name: "Hambúrguer Simples", quantity: 1, notes: "", price: 18.90, prepared: false },
+        { id: 5, name: "Refrigerante", quantity: 1, notes: "Gelado", price: 5.00, prepared: true }
       ],
       status: "Em preparo",
       time: "14:40",
@@ -109,9 +109,10 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
   const addOrder = (orderData: Omit<Order, "id" | "elapsedTime" | "priority">) => {
     const orderId = `#${String(orders.length + 1).padStart(3, '0')}`;
     
-    // Add prepared: false to each item
-    const itemsWithPreparation = orderData.items.map(item => ({
+    // Add prepared: false and ensure id property exists for each item
+    const itemsWithPreparation = orderData.items.map((item, index) => ({
       ...item,
+      id: item.id || Date.now() + index, // Ensure each item has an id
       prepared: false
     }));
     

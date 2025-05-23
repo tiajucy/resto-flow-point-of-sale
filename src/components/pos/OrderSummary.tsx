@@ -1,16 +1,7 @@
-
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-interface OrderItem {
-  id: number;
-  productId: number;
-  name: string;
-  price: number;
-  quantity: number;
-  notes: string;
-}
+import { OrderItem } from "@/context/OrdersContext";
 
 interface OrderSummaryProps {
   items: OrderItem[];
@@ -73,7 +64,7 @@ export const OrderSummary = ({
 
                     <div className="flex items-center justify-between">
                       <div className="text-primary-700 font-medium">
-                        R$ {item.price.toFixed(2)}
+                        R$ {item.price?.toFixed(2)}
                       </div>
 
                       <div className="flex items-center gap-1">
