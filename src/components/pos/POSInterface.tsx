@@ -261,15 +261,17 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
         
         {/* Right Side - Order Summary */}
         <div className="w-1/3 flex flex-col bg-gray-50">
-          <OrderSummary
-            items={orderItems}
-            onRemoveItem={handleRemoveItem}
-            onQuantityChange={handleQuantityChange}
-            total={calculateTotal()}
-            deliveryFee={orderType === "delivery" ? deliveryFee : 0}
-          />
+          <div className="flex-1 overflow-hidden">
+            <OrderSummary
+              items={orderItems}
+              onRemoveItem={handleRemoveItem}
+              onQuantityChange={handleQuantityChange}
+              total={calculateTotal()}
+              deliveryFee={orderType === "delivery" ? deliveryFee : 0}
+            />
+          </div>
           
-          <div className="p-4 border-t mt-auto">
+          <div className="p-4 border-t bg-gray-50">
             <Button 
               onClick={handleSubmitOrder}
               className="w-full bg-green-600 hover:bg-green-700 h-12 text-lg"

@@ -50,77 +50,79 @@ export const OrderSummary = ({
         </div>
       ) : (
         <>
-          <ScrollArea className="flex-1">
-            <div className="p-4 space-y-4">
-              {items.map((item) => (
-                <div key={item.id} className="bg-white p-3 rounded-lg shadow-sm">
-                  <div className="flex justify-between mb-2">
-                    <h4 className="font-medium">{item.name}</h4>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onRemoveItem(item.id)}
-                      className="h-6 w-6 p-0 text-gray-500 hover:text-red-500"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  {item.notes && (
-                    <p className="text-sm text-gray-500 mb-2">{item.notes}</p>
-                  )}
-
-                  <div className="flex items-center justify-between">
-                    <div className="text-primary-700 font-medium">
-                      R$ {item.price.toFixed(2)}
-                    </div>
-
-                    <div className="flex items-center gap-1">
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <ScrollArea className="flex-1">
+              <div className="p-4 space-y-4">
+                {items.map((item) => (
+                  <div key={item.id} className="bg-white p-3 rounded-lg shadow-sm">
+                    <div className="flex justify-between mb-2">
+                      <h4 className="font-medium">{item.name}</h4>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        onClick={() => onQuantityChange(item.id, item.quantity - 1)}
-                        disabled={item.quantity <= 1}
-                        className="h-7 w-7 p-0"
+                        onClick={() => onRemoveItem(item.id)}
+                        className="h-6 w-6 p-0 text-gray-500 hover:text-red-500"
                       >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-
-                      <span className="w-6 text-center font-medium">
-                        {item.quantity}
-                      </span>
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onQuantityChange(item.id, item.quantity + 1)}
-                        className="h-7 w-7 p-0"
-                      >
-                        <Plus className="h-3 w-3" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
 
-          <div className="p-4 border-t bg-white space-y-2">
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span>R$ {subtotal.toFixed(2)}</span>
-            </div>
-            
-            {deliveryFee > 0 && (
-              <div className="flex justify-between">
-                <span>Taxa de entrega</span>
-                <span>R$ {deliveryFee.toFixed(2)}</span>
+                    {item.notes && (
+                      <p className="text-sm text-gray-500 mb-2">{item.notes}</p>
+                    )}
+
+                    <div className="flex items-center justify-between">
+                      <div className="text-primary-700 font-medium">
+                        R$ {item.price.toFixed(2)}
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onQuantityChange(item.id, item.quantity - 1)}
+                          disabled={item.quantity <= 1}
+                          className="h-7 w-7 p-0"
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
+
+                        <span className="w-6 text-center font-medium">
+                          {item.quantity}
+                        </span>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onQuantityChange(item.id, item.quantity + 1)}
+                          className="h-7 w-7 p-0"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
-            
-            <div className="flex justify-between font-bold text-lg pt-2 border-t">
-              <span>Total</span>
-              <span className="text-primary-700">R$ {total.toFixed(2)}</span>
+            </ScrollArea>
+
+            <div className="p-4 border-t bg-white space-y-2 mt-auto">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>R$ {subtotal.toFixed(2)}</span>
+              </div>
+              
+              {deliveryFee > 0 && (
+                <div className="flex justify-between">
+                  <span>Taxa de entrega</span>
+                  <span>R$ {deliveryFee.toFixed(2)}</span>
+                </div>
+              )}
+              
+              <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                <span>Total</span>
+                <span className="text-primary-700">R$ {total.toFixed(2)}</span>
+              </div>
             </div>
           </div>
         </>
