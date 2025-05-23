@@ -31,7 +31,7 @@ export const API_ROUTES = {
     create: `${API_BASE_URL}/orders`,
     updateStatus: (id: string | number) => `${API_BASE_URL}/orders/${id}/status`,
     kitchen: `${API_BASE_URL}/orders/kitchen`,
-    toggleItemPrepared: (orderId: string | number, itemIndex: number) => 
+    toggleItemPrepared: (orderId: string | number, itemIndex: string | number) => 
       `${API_BASE_URL}/orders/${orderId}/items/${itemIndex}/toggle-prepared`,
   },
 
