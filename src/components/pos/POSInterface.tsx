@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ProductList } from "./ProductList";
 import { OrderSummary } from "./OrderSummary";
@@ -33,13 +34,14 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
   const [reference, setReference] = useState("");
   const [deliveryFee, setDeliveryFee] = useState(0);
 
-  // Use real product data from our inventory
+  // Use real product data from our inventory, including status
   const availableProducts = inventoryProducts.map(product => ({
     id: product.id,
     name: product.name,
     category: product.category,
     price: product.price,
-    image: product.image || "/placeholder.svg"
+    image: product.image || "/placeholder.svg",
+    status: product.status
   }));
 
   // Filter products by category and search term

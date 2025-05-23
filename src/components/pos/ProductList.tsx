@@ -16,6 +16,7 @@ interface Product {
   price: number;
   image: string;
   category: string;
+  status?: "Ativo" | "Inativo"; // Added status property
 }
 
 interface ProductListProps {
@@ -31,9 +32,19 @@ export const ProductList = ({ products, onAddItem }: ProductListProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   
   const handleProductClick = (product: Product) => {
-    // Check if product has enough stock
+    // Check if product is inactive
     const inventoryProduct = inventoryProducts.find(p => p.id === product.id);
     
+    if (inventoryProduct && inventoryProduct.status === "Inativo") {
+      toast({
+        title: "Produto indisponível!",
+        description: `${product.name} está inativo e não pode ser adicionado ao pedido.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Check if product has enough stock
     if (inventoryProduct && inventoryProduct.stock <= 0) {
       toast({
         title: "Produto sem estoque!",
@@ -94,6 +105,11 @@ export const ProductList = ({ products, onAddItem }: ProductListProps) => {
     const product = inventoryProducts.find(p => p.id === productId);
     return product?.stock || 0;
   };
+  
+  const isProductInactive = (productId: number) => {
+    const product = inventoryProducts.find(p => p.id === productId);
+    return product?.status === "Inativo";
+  };
 
   return (
     <>
@@ -101,12 +117,13 @@ export const ProductList = ({ products, onAddItem }: ProductListProps) => {
         {products.map((product) => {
           const stock = getStockForProduct(product.id);
           const outOfStock = stock <= 0;
+          const isInactive = isProductInactive(product.id);
           
           return (
             <Card 
               key={product.id} 
               className={`cursor-pointer hover:shadow-lg transition-shadow overflow-hidden ${
-                outOfStock ? 'opacity-60' : ''
+                outOfStock || isInactive ? 'opacity-60' : ''
               }`}
               onClick={() => handleProductClick(product)}
             >
@@ -125,15 +142,17 @@ export const ProductList = ({ products, onAddItem }: ProductListProps) => {
                 {/* Stock badge in top-right corner */}
                 <Badge 
                   variant="secondary" 
-                  className="absolute top-2 right-2 text-xs font-medium bg-green-500 text-white z-10"
+                  className={`absolute top-2 right-2 text-xs font-medium ${
+                    isInactive ? "bg-red-500 text-white" : "bg-green-500 text-white"
+                  } z-10`}
                 >
-                  {stock}
+                  {isInactive ? "Inativo" : stock}
                 </Badge>
                 
-                {outOfStock && (
+                {(outOfStock || isInactive) && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
                     <Badge variant="destructive" className="text-xs font-bold">
-                      SEM ESTOQUE
+                      {isInactive ? "INATIVO" : "SEM ESTOQUE"}
                     </Badge>
                   </div>
                 )}
@@ -147,7 +166,7 @@ export const ProductList = ({ products, onAddItem }: ProductListProps) => {
                   <Button 
                     size="sm" 
                     className="h-7 w-7 p-0 rounded-full"
-                    disabled={outOfStock}
+                    disabled={outOfStock || isInactive}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleProductClick(product);
