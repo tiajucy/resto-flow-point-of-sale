@@ -13,6 +13,7 @@ import Cashier from "./pages/Cashier";
 import Settings from "./pages/Settings";
 import LandingPage from "./pages/LandingPage";
 import NotFound from "./pages/NotFound";
+import SuperAdmin from "./pages/SuperAdmin";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/cashier" element={<Cashier />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/admin" element={<Index />} />
+          <Route path="/superadmin" element={<SuperAdmin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

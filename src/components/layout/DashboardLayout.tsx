@@ -2,12 +2,16 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "./AppSidebar"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
+  // In a real application, this would come from an API call or context
+  const trialDaysLeft = 7;
+  
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50">
@@ -21,6 +25,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
             
             <div className="flex items-center gap-4">
+              {trialDaysLeft > 0 && (
+                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
+                  Período de teste: {trialDaysLeft} dias restantes
+                </Badge>
+              )}
               <Button variant="outline" size="sm">
                 Perfil
               </Button>

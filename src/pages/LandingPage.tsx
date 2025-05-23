@@ -2,8 +2,11 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Check } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 const LandingPage = () => {
+  const navigate = useNavigate();
+  
   const features = [
     "Sistema de PDV completo",
     "Gestão de produtos e categorias",
@@ -56,6 +59,24 @@ const LandingPage = () => {
     }
   ]
 
+  const handleStartFreeTrial = () => {
+    navigate('/admin');
+  };
+
+  const handleViewDemo = () => {
+    navigate('/dashboard');
+  };
+
+  const handleLogin = () => {
+    navigate('/admin');
+  };
+
+  const handlePlanSelection = (planName: string) => {
+    // In a real application, we would store the selected plan
+    // and redirect to registration with the plan pre-selected
+    navigate('/admin', { state: { selectedPlan: planName } });
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -69,8 +90,8 @@ const LandingPage = () => {
           </div>
           
           <div className="flex items-center gap-4">
-            <Button variant="outline">Entrar</Button>
-            <Button className="bg-gradient-primary hover:bg-primary-700">
+            <Button variant="outline" onClick={handleLogin}>Entrar</Button>
+            <Button className="bg-gradient-primary hover:bg-primary-700" onClick={handleStartFreeTrial}>
               Começar Grátis
             </Button>
           </div>
@@ -89,10 +110,19 @@ const LandingPage = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in">
-            <Button size="lg" className="bg-white text-primary-600 hover:bg-gray-100 text-lg px-8 py-4">
-              Teste Grátis por 30 Dias
+            <Button 
+              size="lg" 
+              className="bg-white text-primary-600 hover:bg-gray-100 text-lg px-8 py-4"
+              onClick={handleStartFreeTrial}
+            >
+              Teste Grátis por 7 Dias
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-primary-600 text-lg px-8 py-4">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-white text-white hover:bg-white hover:text-primary-600 text-lg px-8 py-4"
+              onClick={handleViewDemo}
+            >
               Ver Demonstração
             </Button>
           </div>
@@ -137,6 +167,9 @@ const LandingPage = () => {
             <p className="text-xl text-gray-600">
               Escolha o plano ideal para o tamanho do seu negócio
             </p>
+            <p className="text-md text-primary-600 font-semibold mt-2">
+              Todos os planos incluem 7 dias de teste grátis!
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -178,6 +211,7 @@ const LandingPage = () => {
                         : "bg-gray-800 hover:bg-gray-900"
                     }`}
                     size="lg"
+                    onClick={() => handlePlanSelection(plan.name)}
                   >
                     Começar Agora
                   </Button>
@@ -196,9 +230,14 @@ const LandingPage = () => {
           </h2>
           <p className="text-xl mb-8 text-blue-100 max-w-2xl mx-auto">
             Junte-se a milhares de estabelecimentos que já modernizaram sua gestão conosco.
+            Comece hoje mesmo com 7 dias gratuitos!
           </p>
           
-          <Button size="lg" className="bg-white text-primary-600 hover:bg-gray-100 text-lg px-8 py-4">
+          <Button 
+            size="lg" 
+            className="bg-white text-primary-600 hover:bg-gray-100 text-lg px-8 py-4"
+            onClick={handleStartFreeTrial}
+          >
             Comece seu Teste Gratuito
           </Button>
         </div>
