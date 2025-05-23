@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, AlertCircle } from "lucide-react";
+import { useProducts, Product as ProductType } from "@/context/ProductContext";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "@/hooks/use-toast";
 
 interface Product {
   id: number;
@@ -21,12 +24,25 @@ interface ProductListProps {
 }
 
 export const ProductList = ({ products, onAddItem }: ProductListProps) => {
+  const { products: inventoryProducts } = useProducts();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   
   const handleProductClick = (product: Product) => {
+    // Check if product has enough stock
+    const inventoryProduct = inventoryProducts.find(p => p.id === product.id);
+    
+    if (inventoryProduct && inventoryProduct.stock <= 0) {
+      toast({
+        title: "Produto sem estoque!",
+        description: `${product.name} está sem estoque disponível.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setSelectedProduct(product);
     setQuantity(1);
     setNotes("");
@@ -35,12 +51,36 @@ export const ProductList = ({ products, onAddItem }: ProductListProps) => {
   
   const handleAddToOrder = () => {
     if (selectedProduct && quantity > 0) {
+      // Check if we have enough stock
+      const inventoryProduct = inventoryProducts.find(p => p.id === selectedProduct.id);
+      
+      if (inventoryProduct && inventoryProduct.stock < quantity) {
+        toast({
+          title: "Estoque insuficiente!",
+          description: `Apenas ${inventoryProduct.stock} unidades disponíveis.`,
+          variant: "destructive"
+        });
+        return;
+      }
+      
       onAddItem(selectedProduct, quantity, notes);
       setDialogOpen(false);
     }
   };
   
   const handleIncreaseQuantity = () => {
+    // Check if we have enough stock before increasing
+    if (selectedProduct) {
+      const inventoryProduct = inventoryProducts.find(p => p.id === selectedProduct.id);
+      
+      if (inventoryProduct && quantity >= inventoryProduct.stock) {
+        toast({
+          description: `Apenas ${inventoryProduct.stock} unidades disponíveis.`,
+        });
+        return;
+      }
+    }
+    
     setQuantity(prev => prev + 1);
   };
   
@@ -49,43 +89,68 @@ export const ProductList = ({ products, onAddItem }: ProductListProps) => {
       setQuantity(prev => prev - 1);
     }
   };
+  
+  const getStockForProduct = (productId: number) => {
+    const product = inventoryProducts.find(p => p.id === productId);
+    return product?.stock || 0;
+  };
 
   return (
     <>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        {products.map((product) => (
-          <Card 
-            key={product.id} 
-            className="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden" 
-            onClick={() => handleProductClick(product)}
-          >
-            <div className="aspect-square bg-gray-100 overflow-hidden">
-              <img 
-                src={product.image} 
-                alt={product.name} 
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="p-3">
-              <h3 className="font-medium text-sm truncate">{product.name}</h3>
-              <div className="flex justify-between items-center mt-1">
-                <span className="text-primary-700 font-bold">
-                  R$ {product.price.toFixed(2)}
-                </span>
-                <Button 
-                  size="sm" 
-                  className="h-7 w-7 p-0 rounded-full"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleProductClick(product);
-                  }}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
+        {products.map((product) => {
+          const stock = getStockForProduct(product.id);
+          const outOfStock = stock <= 0;
+          
+          return (
+            <Card 
+              key={product.id} 
+              className={`cursor-pointer hover:shadow-lg transition-shadow overflow-hidden ${
+                outOfStock ? 'opacity-60' : ''
+              }`}
+              onClick={() => handleProductClick(product)}
+            >
+              <div className="aspect-square bg-gray-100 overflow-hidden relative">
+                <img 
+                  src={product.image} 
+                  alt={product.name} 
+                  className="w-full h-full object-cover"
+                />
+                {outOfStock && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
+                    <Badge variant="destructive" className="text-xs font-bold">
+                      SEM ESTOQUE
+                    </Badge>
+                  </div>
+                )}
               </div>
-            </div>
-          </Card>
-        ))}
+              <div className="p-3">
+                <h3 className="font-medium text-sm truncate">{product.name}</h3>
+                <div className="flex justify-between items-center mt-1">
+                  <span className="text-primary-700 font-bold">
+                    R$ {product.price.toFixed(2)}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <Badge variant="secondary" className="text-xs">
+                      {stock}
+                    </Badge>
+                    <Button 
+                      size="sm" 
+                      className="h-7 w-7 p-0 rounded-full"
+                      disabled={outOfStock}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleProductClick(product);
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Product Customization Dialog */}
@@ -105,6 +170,13 @@ export const ProductList = ({ products, onAddItem }: ProductListProps) => {
                   </div>
                 </div>
                 
+                <div className="flex items-center justify-between">
+                  <div className="font-medium">Estoque disponível:</div>
+                  <Badge>
+                    {getStockForProduct(selectedProduct.id)} unidades
+                  </Badge>
+                </div>
+                
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     Quantidade:
@@ -121,14 +193,28 @@ export const ProductList = ({ products, onAddItem }: ProductListProps) => {
                     <Input
                       type="number"
                       min="1"
+                      max={getStockForProduct(selectedProduct.id)}
                       value={quantity}
-                      onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        const max = getStockForProduct(selectedProduct.id);
+                        
+                        if (val > max) {
+                          toast({
+                            description: `Apenas ${max} unidades disponíveis.`,
+                          });
+                          setQuantity(max);
+                        } else {
+                          setQuantity(val || 1);
+                        }
+                      }}
                       className="w-16 text-center mx-2"
                     />
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={handleIncreaseQuantity}
+                      disabled={quantity >= getStockForProduct(selectedProduct.id)}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>

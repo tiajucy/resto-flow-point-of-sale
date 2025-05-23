@@ -8,6 +8,7 @@ export interface OrderItem {
   notes: string;
   price?: number;
   prepared: boolean; // Add prepared field to track item preparation status
+  productId?: number; // Add productId to track inventory
 }
 
 // Define the order interface
@@ -33,6 +34,7 @@ interface OrdersContextType {
   updateOrderStatus: (id: string, status: Order["status"]) => void;
   toggleItemPrepared: (orderId: string, itemIndex: number) => void;
   markOrderAsPaid: (orderId: string, paymentMethod: Order["paymentMethod"]) => void; // Add payment function
+  updateInventoryOnSale: (items: OrderItem[]) => void; // Add inventory update function
 }
 
 // Create context with default values
@@ -44,6 +46,7 @@ const OrdersContext = createContext<OrdersContextType>({
   updateOrderStatus: () => {},
   toggleItemPrepared: () => {},
   markOrderAsPaid: () => {},
+  updateInventoryOnSale: () => {}
 });
 
 // Provider component
@@ -118,6 +121,9 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
     };
     
     setOrders([...orders, newOrder]);
+    
+    // Update inventory when order is added
+    updateInventoryOnSale(orderData.items);
   };
 
   // Update order status
@@ -164,6 +170,16 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       )
     );
   };
+  
+  // Update inventory when a sale occurs
+  const updateInventoryOnSale = (items: OrderItem[]) => {
+    // This function will be called when an order is placed
+    // It will decrease the stock of each product in the order
+    console.log("Updating inventory for items:", items);
+    
+    // The actual implementation will be connected to the product context
+    // We're just logging here, as the actual implementation will be in ProductContext
+  };
 
   return (
     <OrdersContext.Provider 
@@ -174,7 +190,8 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
         addOrder, 
         updateOrderStatus,
         toggleItemPrepared,
-        markOrderAsPaid
+        markOrderAsPaid,
+        updateInventoryOnSale
       }}
     >
       {children}
