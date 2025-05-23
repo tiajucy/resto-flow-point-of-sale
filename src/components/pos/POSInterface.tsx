@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { ProductList } from "./ProductList";
 import { OrderSummary } from "./OrderSummary";
@@ -23,6 +22,8 @@ interface POSInterfaceProps {
 
 export const POSInterface = ({ orderType, onSubmit, onCancel, initialOrderData }: POSInterfaceProps) => {
   const { products: inventoryProducts, updateInventoryOnSale } = useProducts();
+  const { getOrderItemProductIds } = useOrders();
+  
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
@@ -58,7 +59,9 @@ export const POSInterface = ({ orderType, onSubmit, onCancel, initialOrderData }
   // Initialize form with existing order data if editing
   useEffect(() => {
     if (initialOrderData) {
-      setOrderItems(initialOrderData.items);
+      // Ensure all items have productId by matching with products
+      const itemsWithProductIds = getOrderItemProductIds(initialOrderData.items);
+      setOrderItems(itemsWithProductIds);
       
       // Parse customer information from initialOrderData.customer
       const customer = initialOrderData.customer;
@@ -80,7 +83,7 @@ export const POSInterface = ({ orderType, onSubmit, onCancel, initialOrderData }
         }
       }
     }
-  }, [initialOrderData, orderType]);
+  }, [initialOrderData, orderType, getOrderItemProductIds]);
 
   const handleAddItem = (product: any, quantity: number, notes: string) => {
     const newItem: OrderItem = {
@@ -159,8 +162,11 @@ export const POSInterface = ({ orderType, onSubmit, onCancel, initialOrderData }
       return;
     }
     
+    // Ensure all items have valid productId for both new orders and edits
+    const allItemsWithProductIds = getOrderItemProductIds(orderItems);
+    
     // Check if all orderItems have productId
-    const validItems = orderItems.every(item => item.productId);
+    const validItems = allItemsWithProductIds.every(item => item.productId);
     
     if (!validItems) {
       toast({
@@ -195,7 +201,7 @@ export const POSInterface = ({ orderType, onSubmit, onCancel, initialOrderData }
       reference,
       deliveryFee,
       items: formattedItems,
-      itemDetails: orderItems, // Keep detailed version for future reference
+      itemDetails: allItemsWithProductIds, // Use items with productId
       total: calculateTotal()
     };
     

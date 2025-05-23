@@ -122,21 +122,29 @@ const Orders = () => {
   const handleOrderUpdate = (updatedOrderData: any) => {
     if (!editingOrder) return;
     
+    // Extract customer display info based on order type
+    let customerDisplay = editingOrder.customer;
+    if (updatedOrderData.orderType === 'mesa') {
+      customerDisplay = `Mesa ${updatedOrderData.tableNumber}`;
+    } else if (updatedOrderData.orderType === 'retirada') {
+      customerDisplay = `Balcão - ${updatedOrderData.customerName}`;
+    } else if (updatedOrderData.orderType === 'delivery') {
+      customerDisplay = `Delivery - ${updatedOrderData.customerName}`;
+    }
+    
     // Update the existing order
     updateOrder({
       ...editingOrder,
+      customer: customerDisplay,
       items: updatedOrderData.itemDetails || [],
-      total: updatedOrderData.total || updatedOrderData.itemDetails?.reduce(
-        (sum: number, item: any) => sum + (item.price * item.quantity), 
-        0
-      ) || editingOrder.total
+      total: updatedOrderData.total || editingOrder.total
     });
     
     toast.success("Pedido atualizado com sucesso!");
     setIsPOSOpen(false);
     setEditingOrder(null);
   }
-
+  
   const handleStatusUpdate = (orderId: string, newStatus: Order["status"]) => {
     updateOrderStatus(orderId, newStatus);
     toast.success(`Status do pedido ${orderId} atualizado para ${newStatus}`);

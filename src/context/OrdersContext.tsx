@@ -37,6 +37,7 @@ interface OrdersContextType {
   markOrderAsPaid: (orderId: string, paymentMethod: Order["paymentMethod"]) => void; // Add payment function
   updateInventoryOnSale: (items: OrderItem[]) => void; // Add inventory update function
   updateOrder: (order: Order) => void; // Add update order function
+  getOrderItemProductIds: (items: OrderItem[]) => OrderItem[]; // Add function to get product IDs
 }
 
 // Create context with default values
@@ -49,12 +50,13 @@ const OrdersContext = createContext<OrdersContextType>({
   toggleItemPrepared: () => {},
   markOrderAsPaid: () => {},
   updateInventoryOnSale: () => {},
-  updateOrder: () => {}
+  updateOrder: () => {},
+  getOrderItemProductIds: () => []
 });
 
 // Provider component
 export const OrdersProvider = ({ children }: { children: ReactNode }) => {
-  const { updateInventoryOnSale: updateProductInventory } = useProducts();
+  const { updateInventoryOnSale: updateProductInventory, products } = useProducts();
   
   const [orders, setOrders] = useState<Order[]>([
     {
@@ -174,11 +176,42 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
     );
   };
   
+  // Helper function to ensure all order items have productId
+  // This is crucial for edit functionality
+  const getOrderItemProductIds = (items: OrderItem[]): OrderItem[] => {
+    return items.map(item => {
+      // If item already has productId, return it unchanged
+      if (item.productId) {
+        return item;
+      }
+      
+      // Try to find matching product by name
+      const matchingProduct = products.find(product => product.name === item.name);
+      
+      if (matchingProduct) {
+        // Return item with productId added
+        return {
+          ...item,
+          productId: matchingProduct.id,
+        };
+      }
+      
+      // Return original item if no match found
+      return item;
+    });
+  };
+  
   // Update an existing order
   const updateOrder = (updatedOrder: Order) => {
+    // Ensure all items have productId before updating
+    const itemsWithProductIds = getOrderItemProductIds(updatedOrder.items);
+    
+    // Update the order with the updated items
     setOrders(
       orders.map(order => 
-        order.id === updatedOrder.id ? updatedOrder : order
+        order.id === updatedOrder.id 
+          ? { ...updatedOrder, items: itemsWithProductIds } 
+          : order
       )
     );
   };
@@ -200,7 +233,8 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
         toggleItemPrepared,
         markOrderAsPaid,
         updateInventoryOnSale,
-        updateOrder
+        updateOrder,
+        getOrderItemProductIds
       }}
     >
       {children}
