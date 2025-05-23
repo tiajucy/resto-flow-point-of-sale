@@ -107,11 +107,6 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
     onSubmit(orderData);
   };
 
-  // Type guard functions to check field existence based on order type
-  const isTableOrder = () => orderType === 'mesa';
-  const isPickupOrder = () => orderType === 'retirada';
-  const isDeliveryOrder = () => orderType === 'delivery';
-
   return (
     <Tabs defaultValue="mesa" className="w-full" onValueChange={handleTabChange}>
       <TabsList className="grid grid-cols-3 mb-6">
@@ -130,7 +125,7 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
                 placeholder="Ex: 5"
                 {...form.register("tableNumber", { shouldUnregister: true })}
               />
-              {isTableOrder() && form.formState.errors.tableNumber && (
+              {orderType === "mesa" && form.formState.errors.tableNumber && (
                 <p className="text-sm text-red-500">{form.formState.errors.tableNumber.message}</p>
               )}
             </div>
@@ -144,7 +139,7 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
                 placeholder="Nome completo"
                 {...form.register("customerName", { shouldUnregister: true })}
               />
-              {isPickupOrder() && form.formState.errors.customerName && (
+              {orderType === "retirada" && form.formState.errors.customerName && (
                 <p className="text-sm text-red-500">{form.formState.errors.customerName?.message}</p>
               )}
             </div>
@@ -156,7 +151,7 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
                 placeholder="(00) 00000-0000"
                 {...form.register("customerPhone", { shouldUnregister: true })}
               />
-              {isPickupOrder() && form.formState.errors.customerPhone && (
+              {orderType === "retirada" && form.formState.errors.customerPhone && (
                 <p className="text-sm text-red-500">{form.formState.errors.customerPhone?.message}</p>
               )}
             </div>
@@ -170,7 +165,7 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
                 placeholder="Nome completo"
                 {...form.register("customerName", { shouldUnregister: true })}
               />
-              {isDeliveryOrder() && form.formState.errors.customerName && (
+              {orderType === "delivery" && form.formState.errors.customerName && (
                 <p className="text-sm text-red-500">{form.formState.errors.customerName?.message}</p>
               )}
             </div>
@@ -182,7 +177,7 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
                 placeholder="(00) 00000-0000"
                 {...form.register("customerPhone", { shouldUnregister: true })}
               />
-              {isDeliveryOrder() && form.formState.errors.customerPhone && (
+              {orderType === "delivery" && form.formState.errors.customerPhone && (
                 <p className="text-sm text-red-500">{form.formState.errors.customerPhone?.message}</p>
               )}
             </div>
@@ -194,7 +189,7 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
                 placeholder="Rua, número, bairro, cidade"
                 {...form.register("address", { shouldUnregister: true })}
               />
-              {isDeliveryOrder() && form.formState.errors.address && (
+              {orderType === "delivery" && form.formState.errors.address && (
                 <p className="text-sm text-red-500">{form.formState.errors.address?.message}</p>
               )}
             </div>
@@ -216,9 +211,9 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
                 step="0.01"
                 min="0"
                 placeholder="0.00"
-                {...form.register("deliveryFee", { shouldUnregister: true })}
+                {...form.register("deliveryFee", { shouldUnregister: true, valueAsNumber: true })}
               />
-              {isDeliveryOrder() && form.formState.errors.deliveryFee && (
+              {orderType === "delivery" && form.formState.errors.deliveryFee && (
                 <p className="text-sm text-red-500">{form.formState.errors.deliveryFee?.message}</p>
               )}
             </div>
