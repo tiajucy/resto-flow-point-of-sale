@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -51,20 +52,21 @@ const Orders = () => {
     if (Array.isArray(orderData.items)) {
       if (typeof orderData.items[0] === 'string') {
         // Handle string array case
-        parsedItems = orderData.items.map((item: string) => {
+        parsedItems = orderData.items.map((item: string, index: number) => {
           // Parse item strings like "2x Hambúrguer Artesanal"
           const match = item.match(/(\d+)x (.+?)(?:\((.+?)\))?$/);
           if (match) {
             const quantity = parseInt(match[1]);
             const name = match[2].trim();
             const notes = match[3] ? match[3].trim() : '';
-            return { name, quantity, notes, prepared: false };
+            return { id: Date.now() + index, name, quantity, notes, prepared: false };
           }
-          return { name: item, quantity: 1, notes: '', prepared: false };
+          return { id: Date.now() + index, name: item, quantity: 1, notes: '', prepared: false };
         });
       } else if (orderData.itemDetails && Array.isArray(orderData.itemDetails)) {
         // Use detailed items if available
         parsedItems = orderData.itemDetails.map((item: any) => ({
+          id: item.id || Date.now() + Math.random(),
           name: item.name,
           quantity: item.quantity,
           notes: item.notes || '',
@@ -83,7 +85,7 @@ const Orders = () => {
     
     addOrder({
       customer: customerDisplay,
-      items: parsedItems.length > 0 ? parsedItems : [{ name: "Itens não especificados", quantity: 1, notes: "", prepared: false }],
+      items: parsedItems,
       status: "Aguardando",
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       total: total,

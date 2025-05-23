@@ -1,4 +1,3 @@
-
 import { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { OrderItem } from "./OrdersContext";
 import { useToast } from "@/hooks/use-toast";
@@ -178,42 +177,50 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   
   // Update inventory when an order is placed
   const updateInventoryOnSale = (items: OrderItem[]) => {
-    console.log("Updating inventory for sale items:", items);
+    console.log("Updating inventory for sale items:", JSON.stringify(items));
+    
+    if (!items || items.length === 0) {
+      console.warn("No items provided to update inventory");
+      return;
+    }
     
     items.forEach(item => {
-      if (item.productId) {
-        // Find the product
-        const product = products.find(p => p.id === item.productId);
+      if (!item.productId) {
+        console.warn(`Item ${item.name} has no productId, skipping inventory update`);
+        return;
+      }
+      
+      // Find the product
+      const product = products.find(p => p.id === item.productId);
+      
+      if (product) {
+        console.log(`Processing item: ${item.name}, quantity: ${item.quantity}, product ID: ${item.productId}, current stock: ${product.stock}`);
         
-        if (product) {
-          console.log(`Processing item: ${item.name}, quantity: ${item.quantity}, product ID: ${item.productId}`);
-          
-          // Create inventory transaction for the sale
-          addInventoryTransaction({
-            productId: item.productId,
-            type: "saída",
-            quantity: item.quantity,
-            reason: "Venda"
+        // Create inventory transaction for the sale
+        addInventoryTransaction({
+          productId: item.productId,
+          type: "saída",
+          quantity: item.quantity,
+          reason: "Venda"
+        });
+        
+        // Show toast for low inventory after sale if needed
+        const remainingStock = product.stock - item.quantity;
+        if (remainingStock < 10 && remainingStock > 0) {
+          toast({
+            title: "Estoque baixo!",
+            description: `${product.name} está com apenas ${remainingStock} unidades em estoque.`,
+            variant: "default" 
           });
-          
-          // Show toast for low inventory after sale if needed
-          const remainingStock = product.stock - item.quantity;
-          if (remainingStock < 10 && remainingStock > 0) {
-            toast({
-              title: "Estoque baixo!",
-              description: `${product.name} está com apenas ${remainingStock} unidades em estoque.`,
-              variant: "default" // Changed from "warning" to "default"
-            });
-          } else if (remainingStock <= 0) {
-            toast({
-              title: "Produto sem estoque!",
-              description: `${product.name} está sem estoque disponível.`,
-              variant: "destructive"
-            });
-          }
-        } else {
-          console.warn(`Product with ID ${item.productId} not found in inventory`);
+        } else if (remainingStock <= 0) {
+          toast({
+            title: "Produto sem estoque!",
+            description: `${product.name} está sem estoque disponível.`,
+            variant: "destructive"
+          });
         }
+      } else {
+        console.warn(`Product with ID ${item.productId} not found in inventory`);
       }
     });
   };

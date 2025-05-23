@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProducts } from "@/context/ProductContext";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
+import { toast } from "@/hooks/use-toast";
 
 // Sample product categories for demonstration
 const productCategories = [
@@ -84,26 +85,56 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
   const handleSubmitOrder = () => {
     // Validate form based on order type
     if (orderType === "mesa" && !tableNumber) {
-      alert("Por favor, informe o número da mesa.");
+      toast({
+        title: "Erro no pedido",
+        description: "Por favor, informe o número da mesa.",
+        variant: "destructive"
+      });
       return;
     }
     
     if ((orderType === "retirada" || orderType === "delivery") && (!customerName || !customerPhone)) {
-      alert("Nome e telefone do cliente são obrigatórios.");
+      toast({
+        title: "Erro no pedido",
+        description: "Nome e telefone do cliente são obrigatórios.",
+        variant: "destructive"
+      });
       return;
     }
     
     if (orderType === "delivery" && !address) {
-      alert("Endereço de entrega é obrigatório.");
+      toast({
+        title: "Erro no pedido",
+        description: "Endereço de entrega é obrigatório.",
+        variant: "destructive"
+      });
       return;
     }
     
     if (orderItems.length === 0) {
-      alert("Adicione pelo menos um item ao pedido.");
+      toast({
+        title: "Erro no pedido",
+        description: "Adicione pelo menos um item ao pedido.",
+        variant: "destructive"
+      });
       return;
     }
     
-    // Update inventory right away when order is placed
+    // Check if all orderItems have productId
+    const validItems = orderItems.every(item => item.productId);
+    
+    if (!validItems) {
+      toast({
+        title: "Erro no processamento",
+        description: "Alguns itens não têm referência de produto.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Update inventory BEFORE creating the order
+    // This ensures the inventory is updated even if there's an issue with order creation
+    console.log("Updating inventory with items:", JSON.stringify(orderItems));
     updateInventoryOnSale(orderItems);
     
     // Format items for display on order card
@@ -122,7 +153,6 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
       reference,
       deliveryFee,
       items: formattedItems,
-      total: calculateTotal(),
       itemDetails: orderItems // Keep detailed version for future reference
     };
     
