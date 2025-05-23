@@ -7,10 +7,14 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "@/components/ui/sonner"
 import { NewOrderForm } from "@/components/forms/NewOrderForm"
+import { POSInterface } from "@/components/pos/POSInterface"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
 
 const Orders = () => {
   const [selectedStatus, setSelectedStatus] = useState("Todos")
   const [isNewOrderDialogOpen, setIsNewOrderDialogOpen] = useState(false)
+  const [isPOSOpen, setIsPOSOpen] = useState(false)
+  const [currentOrderType, setCurrentOrderType] = useState<"mesa" | "retirada" | "delivery" | null>(null)
   const [orders, setOrders] = useState([
     {
       id: "#001",
@@ -79,17 +83,15 @@ const Orders = () => {
       customerDisplay = `Delivery - ${orderData.customerName}`;
     }
     
-    // Parse the items text into an array
-    const itemsArray = orderData.items 
-      ? orderData.items.split('\n').filter((item: string) => item.trim() !== '') 
-      : [];
+    // Parse the items array from the POS interface
+    const itemsArray = orderData.items || [];
     
     // Create the new order
     const newOrder = {
       id: orderId,
       customer: customerDisplay,
       items: itemsArray.length > 0 ? itemsArray : ["Itens não especificados"],
-      total: orderData.orderType === 'delivery' ? orderData.deliveryFee : 0, // For now, only delivery fee is added
+      total: orderData.total || 0,
       status: "Aguardando",
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       estimatedTime: "20 min"
@@ -100,6 +102,12 @@ const Orders = () => {
     
     toast.success("Pedido criado com sucesso!");
     setIsNewOrderDialogOpen(false);
+    setIsPOSOpen(false);
+  }
+
+  const openPOS = (orderType: "mesa" | "retirada" | "delivery") => {
+    setCurrentOrderType(orderType);
+    setIsPOSOpen(true);
   }
 
   return (
@@ -195,15 +203,56 @@ const Orders = () => {
         </div>
       </div>
 
-      {/* New Order Dialog */}
+      {/* New Order Type Selection Dialog */}
       <Dialog open={isNewOrderDialogOpen} onOpenChange={setIsNewOrderDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">Novo Pedido</DialogTitle>
           </DialogHeader>
-          <NewOrderForm onSubmit={handleNewOrder} />
+          <div className="grid grid-cols-1 gap-4 py-4">
+            <Button 
+              onClick={() => {
+                setIsNewOrderDialogOpen(false);
+                openPOS("mesa");
+              }}
+              className="bg-blue-500 hover:bg-blue-600 h-16 text-lg"
+            >
+              Pedido de Mesa
+            </Button>
+            <Button 
+              onClick={() => {
+                setIsNewOrderDialogOpen(false);
+                openPOS("retirada");
+              }}
+              className="bg-amber-500 hover:bg-amber-600 h-16 text-lg"
+            >
+              Pedido de Retirada
+            </Button>
+            <Button 
+              onClick={() => {
+                setIsNewOrderDialogOpen(false);
+                openPOS("delivery");
+              }}
+              className="bg-green-500 hover:bg-green-600 h-16 text-lg"
+            >
+              Pedido de Delivery
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
+
+      {/* POS Interface */}
+      <Sheet open={isPOSOpen} onOpenChange={setIsPOSOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-full md:max-w-4xl p-0 overflow-y-auto">
+          {currentOrderType && (
+            <POSInterface 
+              orderType={currentOrderType} 
+              onSubmit={handleNewOrder}
+              onCancel={() => setIsPOSOpen(false)}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
     </DashboardLayout>
   )
 }
