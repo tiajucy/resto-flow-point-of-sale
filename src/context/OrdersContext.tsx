@@ -1,5 +1,6 @@
 
 import { createContext, useState, useContext, ReactNode } from "react";
+import { useProducts } from "./ProductContext";
 
 // Define the order item interface
 export interface OrderItem {
@@ -51,6 +52,8 @@ const OrdersContext = createContext<OrdersContextType>({
 
 // Provider component
 export const OrdersProvider = ({ children }: { children: ReactNode }) => {
+  const { updateInventoryOnSale: updateProductInventory } = useProducts();
+  
   const [orders, setOrders] = useState<Order[]>([
     {
       id: "#001",
@@ -121,9 +124,6 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
     };
     
     setOrders([...orders, newOrder]);
-    
-    // Update inventory when order is added
-    updateInventoryOnSale(orderData.items);
   };
 
   // Update order status
@@ -171,14 +171,10 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
     );
   };
   
-  // Update inventory when a sale occurs
+  // Update inventory when a sale occurs - pass to ProductContext
   const updateInventoryOnSale = (items: OrderItem[]) => {
-    // This function will be called when an order is placed
-    // It will decrease the stock of each product in the order
-    console.log("Updating inventory for items:", items);
-    
-    // The actual implementation will be connected to the product context
-    // We're just logging here, as the actual implementation will be in ProductContext
+    // Forward the call to the ProductContext
+    updateProductInventory(items);
   };
 
   return (

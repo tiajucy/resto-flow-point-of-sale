@@ -178,12 +178,16 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   
   // Update inventory when an order is placed
   const updateInventoryOnSale = (items: OrderItem[]) => {
+    console.log("Updating inventory for sale items:", items);
+    
     items.forEach(item => {
       if (item.productId) {
         // Find the product
         const product = products.find(p => p.id === item.productId);
         
         if (product) {
+          console.log(`Processing item: ${item.name}, quantity: ${item.quantity}, product ID: ${item.productId}`);
+          
           // Create inventory transaction for the sale
           addInventoryTransaction({
             productId: item.productId,
@@ -191,6 +195,24 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
             quantity: item.quantity,
             reason: "Venda"
           });
+          
+          // Show toast for low inventory after sale if needed
+          const remainingStock = product.stock - item.quantity;
+          if (remainingStock < 10 && remainingStock > 0) {
+            toast({
+              title: "Estoque baixo!",
+              description: `${product.name} está com apenas ${remainingStock} unidades em estoque.`,
+              variant: "warning"
+            });
+          } else if (remainingStock <= 0) {
+            toast({
+              title: "Produto sem estoque!",
+              description: `${product.name} está sem estoque disponível.`,
+              variant: "destructive"
+            });
+          }
+        } else {
+          console.warn(`Product with ID ${item.productId} not found in inventory`);
         }
       }
     });

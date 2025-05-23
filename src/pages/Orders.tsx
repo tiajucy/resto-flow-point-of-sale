@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,7 +16,7 @@ const Orders = () => {
   const [isNewOrderDialogOpen, setIsNewOrderDialogOpen] = useState(false)
   const [isPOSOpen, setIsPOSOpen] = useState(false)
   const [currentOrderType, setCurrentOrderType] = useState<"mesa" | "retirada" | "delivery" | null>(null)
-  const { orders, addOrder, updateOrderStatus, toggleItemPrepared } = useOrders();
+  const { orders, addOrder, updateOrderStatus, toggleItemPrepared, updateInventoryOnSale } = useOrders();
 
   const statusOptions = ["Todos", "Aguardando", "Em preparo", "Pronto", "Entregue"]
 
@@ -70,7 +69,8 @@ const Orders = () => {
           quantity: item.quantity,
           notes: item.notes || '',
           price: item.price || 0,
-          prepared: false
+          prepared: false,
+          productId: item.productId // Ensure productId is passed through
         }));
       }
     }

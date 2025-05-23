@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ProductList } from "./ProductList";
 import { OrderSummary } from "./OrderSummary";
@@ -6,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProducts } from "@/context/ProductContext";
+import { useOrders } from "@/context/OrdersContext";
 
 // Sample product categories for demonstration
 const productCategories = [
@@ -19,7 +19,7 @@ interface POSInterfaceProps {
 }
 
 export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProps) => {
-  const { products: inventoryProducts } = useProducts();
+  const { products: inventoryProducts, updateInventoryOnSale } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [orderItems, setOrderItems] = useState<Array<{
@@ -108,6 +108,9 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
       alert("Adicione pelo menos um item ao pedido.");
       return;
     }
+    
+    // Update inventory right away when order is placed
+    updateInventoryOnSale(orderItems);
     
     // Format items for display on order card
     const formattedItems = orderItems.map(item => {
