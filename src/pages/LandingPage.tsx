@@ -1,11 +1,20 @@
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Check } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react"
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const [plans, setPlans] = useState([]);
+  
+  // Fetch plans from localStorage if available
+  useEffect(() => {
+    const storedPlans = localStorage.getItem('plans');
+    if (storedPlans) {
+      setPlans(JSON.parse(storedPlans));
+    }
+  }, []);
   
   const features = [
     "Sistema de PDV completo",
@@ -18,11 +27,12 @@ const LandingPage = () => {
     "Interface responsiva"
   ]
 
-  const plans = [
+  // Use plans from SuperAdmin if available, otherwise use default plans
+  const displayPlans = plans.length > 0 ? plans : [
     {
       name: "Básico",
-      price: "R$ 49,90",
-      period: "/mês",
+      price: 49.90,
+      period: "mês",
       features: [
         "Até 100 produtos",
         "1 terminal PDV",
@@ -32,8 +42,8 @@ const LandingPage = () => {
     },
     {
       name: "Profissional",
-      price: "R$ 99,90",
-      period: "/mês",
+      price: 99.90,
+      period: "mês",
       features: [
         "Produtos ilimitados",
         "3 terminais PDV",
@@ -46,8 +56,8 @@ const LandingPage = () => {
     },
     {
       name: "Enterprise",
-      price: "R$ 199,90",
-      period: "/mês",
+      price: 199.90,
+      period: "mês",
       features: [
         "Tudo do Profissional",
         "Terminais ilimitados",
@@ -57,10 +67,10 @@ const LandingPage = () => {
         "Consultoria gratuita"
       ]
     }
-  ]
+  ];
 
   const handleStartFreeTrial = () => {
-    navigate('/admin');
+    navigate('/register');
   };
 
   const handleViewDemo = () => {
@@ -68,13 +78,13 @@ const LandingPage = () => {
   };
 
   const handleLogin = () => {
-    navigate('/admin');
+    navigate('/login');
   };
 
-  const handlePlanSelection = (planName: string) => {
-    // In a real application, we would store the selected plan
-    // and redirect to registration with the plan pre-selected
-    navigate('/admin', { state: { selectedPlan: planName } });
+  const handlePlanSelection = (plan) => {
+    // Store the selected plan and navigate to registration
+    localStorage.setItem('selectedPlan', JSON.stringify(plan));
+    navigate('/register');
   };
 
   return (
@@ -173,7 +183,7 @@ const LandingPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {plans.map((plan, index) => (
+            {displayPlans.map((plan, index) => (
               <Card 
                 key={index} 
                 className={`bg-white shadow-lg hover:shadow-xl transition-all duration-300 relative ${
@@ -191,16 +201,18 @@ const LandingPage = () => {
                 <CardHeader className="text-center pb-8">
                   <CardTitle className="text-2xl font-bold text-gray-800">{plan.name}</CardTitle>
                   <div className="mt-4">
-                    <span className="text-4xl font-bold text-primary-600">{plan.price}</span>
-                    <span className="text-gray-600">{plan.period}</span>
+                    <span className="text-4xl font-bold text-primary-600">
+                      R$ {typeof plan.price === 'number' ? plan.price.toFixed(2).replace('.', ',') : plan.price}
+                    </span>
+                    <span className="text-gray-600">/{plan.period}</span>
                   </div>
                 </CardHeader>
                 
                 <CardContent className="space-y-4">
-                  {plan.features.map((feature, featureIndex) => (
+                  {plan.features && plan.features.map((feature, featureIndex) => (
                     <div key={featureIndex} className="flex items-center gap-3">
                       <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                      <span className="text-gray-700">{feature}</span>
+                      <span className="text-gray-700">{feature.description || feature}</span>
                     </div>
                   ))}
                   
@@ -211,7 +223,7 @@ const LandingPage = () => {
                         : "bg-gray-800 hover:bg-gray-900"
                     }`}
                     size="lg"
-                    onClick={() => handlePlanSelection(plan.name)}
+                    onClick={() => handlePlanSelection(plan)}
                   >
                     Começar Agora
                   </Button>

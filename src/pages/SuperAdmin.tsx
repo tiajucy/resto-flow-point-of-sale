@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "@/components/ui/sonner"
 
 interface PlanFeature {
   id: string
@@ -66,6 +67,19 @@ const SuperAdmin = () => {
     }
   ]);
 
+  // Load plans from localStorage on component mount
+  useEffect(() => {
+    const storedPlans = localStorage.getItem('plans');
+    if (storedPlans) {
+      setPlans(JSON.parse(storedPlans));
+    }
+  }, []);
+
+  // Save plans to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('plans', JSON.stringify(plans));
+  }, [plans]);
+
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const [newFeature, setNewFeature] = useState("");
 
@@ -77,6 +91,7 @@ const SuperAdmin = () => {
     if (editingPlan) {
       setPlans(plans.map(p => p.id === editingPlan.id ? editingPlan : p));
       setEditingPlan(null);
+      toast.success("Plano atualizado com sucesso!");
     }
   };
 
@@ -114,6 +129,7 @@ const SuperAdmin = () => {
       ...p,
       popular: p.id === planId
     })));
+    toast.success("Plano marcado como popular!");
   };
 
   return (
