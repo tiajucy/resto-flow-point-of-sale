@@ -4,15 +4,14 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "@/components/ui/sonner"
 import { NewOrderForm } from "@/components/forms/NewOrderForm"
 
 const Orders = () => {
   const [selectedStatus, setSelectedStatus] = useState("Todos")
   const [isNewOrderDialogOpen, setIsNewOrderDialogOpen] = useState(false)
-
-  const orders = [
+  const [orders, setOrders] = useState([
     {
       id: "#001",
       customer: "Mesa 5",
@@ -49,7 +48,7 @@ const Orders = () => {
       time: "14:35",
       estimatedTime: "20 min"
     }
-  ]
+  ])
 
   const statusOptions = ["Todos", "Aguardando", "Em preparo", "Pronto", "Entregue"]
 
@@ -68,9 +67,39 @@ const Orders = () => {
     : orders.filter(order => order.status === selectedStatus)
     
   const handleNewOrder = (orderData: any) => {
-    console.log("Novo pedido criado:", orderData)
-    toast.success("Pedido criado com sucesso!")
-    setIsNewOrderDialogOpen(false)
+    const orderId = `#${String(orders.length + 1).padStart(3, '0')}`;
+    
+    // Format the customer information based on order type
+    let customerDisplay = '';
+    if (orderData.orderType === 'mesa') {
+      customerDisplay = `Mesa ${orderData.tableNumber}`;
+    } else if (orderData.orderType === 'retirada') {
+      customerDisplay = `Balcão - ${orderData.customerName}`;
+    } else if (orderData.orderType === 'delivery') {
+      customerDisplay = `Delivery - ${orderData.customerName}`;
+    }
+    
+    // Parse the items text into an array
+    const itemsArray = orderData.items 
+      ? orderData.items.split('\n').filter((item: string) => item.trim() !== '') 
+      : [];
+    
+    // Create the new order
+    const newOrder = {
+      id: orderId,
+      customer: customerDisplay,
+      items: itemsArray.length > 0 ? itemsArray : ["Itens não especificados"],
+      total: orderData.orderType === 'delivery' ? orderData.deliveryFee : 0, // For now, only delivery fee is added
+      status: "Aguardando",
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      estimatedTime: "20 min"
+    };
+    
+    // Update orders state
+    setOrders(prevOrders => [...prevOrders, newOrder]);
+    
+    toast.success("Pedido criado com sucesso!");
+    setIsNewOrderDialogOpen(false);
   }
 
   return (

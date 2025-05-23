@@ -4,26 +4,30 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Textarea } from "@/components/ui/textarea"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 
+// Create a base schema with common fields
+const baseOrderSchema = {
+  items: z.string().optional(),
+};
+
 // Define the validation schema based on order type
 const tableOrderSchema = z.object({
   orderType: z.literal("mesa"),
   tableNumber: z.string().min(1, "Número da mesa é obrigatório"),
-  items: z.string().optional(),
-})
+  ...baseOrderSchema
+});
 
 const pickupOrderSchema = z.object({
   orderType: z.literal("retirada"),
   customerName: z.string().min(3, "Nome é obrigatório e deve ter no mínimo 3 caracteres"),
   customerPhone: z.string().min(10, "Telefone é obrigatório"),
-  items: z.string().optional(),
-})
+  ...baseOrderSchema
+});
 
 const deliveryOrderSchema = z.object({
   orderType: z.literal("delivery"),
@@ -32,24 +36,24 @@ const deliveryOrderSchema = z.object({
   address: z.string().min(5, "Endereço completo é obrigatório"),
   reference: z.string().optional(),
   deliveryFee: z.coerce.number().min(0, "Taxa de entrega não pode ser negativa"),
-  items: z.string().optional(),
-})
+  ...baseOrderSchema
+});
 
 // Union the schemas
 const orderSchema = z.discriminatedUnion("orderType", [
   tableOrderSchema,
   pickupOrderSchema,
   deliveryOrderSchema
-])
+]);
 
-type OrderFormValues = z.infer<typeof orderSchema>
+type OrderFormValues = z.infer<typeof orderSchema>;
 
 interface NewOrderFormProps {
-  onSubmit: (data: any) => void
+  onSubmit: (data: any) => void;
 }
 
 export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
-  const [orderType, setOrderType] = useState<"mesa" | "retirada" | "delivery">("mesa")
+  const [orderType, setOrderType] = useState<"mesa" | "retirada" | "delivery">("mesa");
   
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
@@ -58,10 +62,10 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
       tableNumber: "",
       items: "",
     } as any,
-  })
+  });
 
   const handleTabChange = (value: string) => {
-    setOrderType(value as "mesa" | "retirada" | "delivery")
+    setOrderType(value as "mesa" | "retirada" | "delivery");
     
     // Reset the form with new defaults based on order type
     if (value === "mesa") {
@@ -69,14 +73,14 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
         orderType: "mesa",
         tableNumber: "",
         items: "",
-      })
+      });
     } else if (value === "retirada") {
       form.reset({
         orderType: "retirada",
         customerName: "",
         customerPhone: "",
         items: "",
-      })
+      });
     } else if (value === "delivery") {
       form.reset({
         orderType: "delivery",
@@ -86,9 +90,9 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
         reference: "",
         deliveryFee: 0,
         items: "",
-      })
+      });
     }
-  }
+  };
 
   const handleFormSubmit = (data: OrderFormValues) => {
     // Create a new data object with a total field
@@ -98,10 +102,15 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
         ((data as any).deliveryFee || 0) : 0,
       status: "Aguardando",
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    }
+    };
     
-    onSubmit(orderData)
-  }
+    onSubmit(orderData);
+  };
+
+  // Type guard functions to check field existence based on order type
+  const isTableOrder = () => orderType === 'mesa';
+  const isPickupOrder = () => orderType === 'retirada';
+  const isDeliveryOrder = () => orderType === 'delivery';
 
   return (
     <Tabs defaultValue="mesa" className="w-full" onValueChange={handleTabChange}>
@@ -119,9 +128,9 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
               <Input 
                 id="tableNumber" 
                 placeholder="Ex: 5"
-                {...form.register("tableNumber")}
+                {...form.register("tableNumber", { shouldUnregister: true })}
               />
-              {form.formState.errors.tableNumber && (
+              {isTableOrder() && form.formState.errors.tableNumber && (
                 <p className="text-sm text-red-500">{form.formState.errors.tableNumber.message}</p>
               )}
             </div>
@@ -133,9 +142,9 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
               <Input 
                 id="customerName" 
                 placeholder="Nome completo"
-                {...form.register("customerName")}
+                {...form.register("customerName", { shouldUnregister: true })}
               />
-              {form.formState.errors.customerName && (
+              {isPickupOrder() && form.formState.errors.customerName && (
                 <p className="text-sm text-red-500">{form.formState.errors.customerName?.message}</p>
               )}
             </div>
@@ -145,9 +154,9 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
               <Input 
                 id="customerPhone" 
                 placeholder="(00) 00000-0000"
-                {...form.register("customerPhone")}
+                {...form.register("customerPhone", { shouldUnregister: true })}
               />
-              {form.formState.errors.customerPhone && (
+              {isPickupOrder() && form.formState.errors.customerPhone && (
                 <p className="text-sm text-red-500">{form.formState.errors.customerPhone?.message}</p>
               )}
             </div>
@@ -159,9 +168,9 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
               <Input 
                 id="customerName" 
                 placeholder="Nome completo"
-                {...form.register("customerName")}
+                {...form.register("customerName", { shouldUnregister: true })}
               />
-              {form.formState.errors.customerName && (
+              {isDeliveryOrder() && form.formState.errors.customerName && (
                 <p className="text-sm text-red-500">{form.formState.errors.customerName?.message}</p>
               )}
             </div>
@@ -171,9 +180,9 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
               <Input 
                 id="customerPhone" 
                 placeholder="(00) 00000-0000"
-                {...form.register("customerPhone")}
+                {...form.register("customerPhone", { shouldUnregister: true })}
               />
-              {form.formState.errors.customerPhone && (
+              {isDeliveryOrder() && form.formState.errors.customerPhone && (
                 <p className="text-sm text-red-500">{form.formState.errors.customerPhone?.message}</p>
               )}
             </div>
@@ -183,9 +192,9 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
               <Textarea 
                 id="address" 
                 placeholder="Rua, número, bairro, cidade"
-                {...form.register("address")}
+                {...form.register("address", { shouldUnregister: true })}
               />
-              {form.formState.errors.address && (
+              {isDeliveryOrder() && form.formState.errors.address && (
                 <p className="text-sm text-red-500">{form.formState.errors.address?.message}</p>
               )}
             </div>
@@ -195,7 +204,7 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
               <Input 
                 id="reference" 
                 placeholder="Próximo a..."
-                {...form.register("reference")}
+                {...form.register("reference", { shouldUnregister: true })}
               />
             </div>
 
@@ -207,9 +216,9 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
                 step="0.01"
                 min="0"
                 placeholder="0.00"
-                {...form.register("deliveryFee")}
+                {...form.register("deliveryFee", { shouldUnregister: true })}
               />
-              {form.formState.errors.deliveryFee && (
+              {isDeliveryOrder() && form.formState.errors.deliveryFee && (
                 <p className="text-sm text-red-500">{form.formState.errors.deliveryFee?.message}</p>
               )}
             </div>
@@ -236,5 +245,5 @@ export const NewOrderForm = ({ onSubmit }: NewOrderFormProps) => {
         </form>
       </Form>
     </Tabs>
-  )
-}
+  );
+};
