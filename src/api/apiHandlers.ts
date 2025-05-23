@@ -1,3 +1,4 @@
+
 import { Product, InventoryTransaction } from "../context/ProductContext";
 import { Order, OrderItem } from "../context/OrdersContext";
 
@@ -353,6 +354,110 @@ export const EstablishmentsHandler = {
   getPaymentHistory: (id: string | number) => {
     return paymentHistory.filter(payment => payment.establishmentId === id);
   },
+};
+
+// Reports Handler - Adding this new handler
+export const ReportsHandler = {
+  // Get sales data by period (day, week, month)
+  getSales: (period: string) => {
+    // Mock data for sales report
+    let data: number[] = [];
+    let labels: string[] = [];
+    
+    // Generate data based on period
+    switch(period) {
+      case 'day':
+        labels = Array.from({length: 24}, (_, i) => `${i}:00`);
+        data = labels.map(() => Math.floor(Math.random() * 30));
+        break;
+      case 'week':
+        labels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        data = labels.map(() => Math.floor(Math.random() * 100) + 20);
+        break;
+      case 'month':
+        labels = Array.from({length: 30}, (_, i) => `${i+1}`);
+        data = labels.map(() => Math.floor(Math.random() * 200) + 50);
+        break;
+      default:
+        labels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        data = labels.map(() => Math.floor(Math.random() * 100) + 20);
+    }
+    
+    return { labels, data };
+  },
+  
+  // Get revenue data by period
+  getRevenue: (period: string) => {
+    // Mock data for revenue report
+    let data: number[] = [];
+    let labels: string[] = [];
+    
+    // Generate data based on period
+    switch(period) {
+      case 'day':
+        labels = Array.from({length: 24}, (_, i) => `${i}:00`);
+        data = labels.map(() => Math.random() * 1000 + 100);
+        break;
+      case 'week':
+        labels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        data = labels.map(() => Math.random() * 3000 + 500);
+        break;
+      case 'month':
+        labels = Array.from({length: 30}, (_, i) => `${i+1}`);
+        data = labels.map(() => Math.random() * 5000 + 1000);
+        break;
+      default:
+        labels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        data = labels.map(() => Math.random() * 3000 + 500);
+    }
+    
+    return { labels, data };
+  },
+  
+  // Get top products by period
+  getTopProducts: (period: string) => {
+    // Mock data for top products
+    return [
+      { id: 1, name: "Hambúrguer Artesanal", quantity: 124, revenue: 3211.60 },
+      { id: 2, name: "Pizza Margherita", quantity: 98, revenue: 3479.00 },
+      { id: 3, name: "Refrigerante Lata", quantity: 210, revenue: 1050.00 },
+      { id: 4, name: "Batata Frita", quantity: 145, revenue: 1740.00 },
+      { id: 5, name: "Milk Shake", quantity: 78, revenue: 1170.00 }
+    ];
+  },
+  
+  // Get order statistics by period
+  getOrderStats: (period: string) => {
+    // Mock data for order stats
+    return {
+      total: Math.floor(Math.random() * 500) + 100,
+      completed: Math.floor(Math.random() * 400) + 80,
+      canceled: Math.floor(Math.random() * 20) + 5,
+      average: Math.random() * 100 + 30,
+      byStatus: [
+        { status: "Concluído", count: Math.floor(Math.random() * 300) + 100 },
+        { status: "Em preparo", count: Math.floor(Math.random() * 50) + 10 },
+        { status: "Aguardando", count: Math.floor(Math.random() * 30) + 5 },
+        { status: "Cancelado", count: Math.floor(Math.random() * 20) + 5 }
+      ]
+    };
+  },
+  
+  // Get daily activity data
+  getDailyActivity: () => {
+    const hours = Array.from({length: 24}, (_, i) => `${i}:00`);
+    const data = hours.map(() => Math.floor(Math.random() * 30));
+    
+    // Find peak hour
+    const peakIndex = data.indexOf(Math.max(...data));
+    const peakHour = hours[peakIndex];
+    
+    return {
+      labels: hours,
+      data,
+      peakHour
+    };
+  }
 };
 
 export { initializeApiData, establishments, plans, paymentHistory };
