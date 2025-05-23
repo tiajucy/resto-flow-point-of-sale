@@ -13,6 +13,7 @@ let products: Product[] = [
 
 let inventoryTransactions: InventoryTransaction[] = [];
 let orders: Order[] = [];
+let establishments: any[] = [];
 
 // Initialize with sample data
 const initializeApiData = (
@@ -29,8 +30,9 @@ const initializeApiData = (
 export const ProductsHandler = {
   getAll: () => [...products],
   
-  getById: (id: number) => {
-    const product = products.find(p => p.id === id);
+  getById: (id: number | string) => {
+    const numId = typeof id === 'string' ? parseInt(id) : id;
+    const product = products.find(p => p.id === numId);
     if (!product) throw new Error(`Product with ID ${id} not found`);
     return product;
   },
@@ -49,8 +51,9 @@ export const ProductsHandler = {
     return updatedProduct;
   },
   
-  delete: (id: number) => {
-    const index = products.findIndex(p => p.id === id);
+  delete: (id: number | string) => {
+    const numId = typeof id === 'string' ? parseInt(id) : id;
+    const index = products.findIndex(p => p.id === numId);
     if (index === -1) throw new Error(`Product with ID ${id} not found`);
     products.splice(index, 1);
     return true;
@@ -89,8 +92,10 @@ export const InventoryHandler = {
     return newTransaction;
   },
   
-  getByProduct: (productId: number) => 
-    inventoryTransactions.filter(t => t.productId === productId),
+  getByProduct: (productId: number | string) => {
+    const numId = typeof productId === 'string' ? parseInt(productId) : productId;
+    return inventoryTransactions.filter(t => t.productId === numId);
+  }
 };
 
 // Orders Handler
@@ -153,4 +158,53 @@ export const OrdersHandler = {
   },
 };
 
-export { initializeApiData };
+// New Establishments Handler
+export const EstablishmentsHandler = {
+  getAll: () => [...establishments],
+  
+  getById: (id: string | number) => {
+    const establishment = establishments.find(e => e.id === id);
+    if (!establishment) throw new Error(`Establishment with ID ${id} not found`);
+    return establishment;
+  },
+  
+  create: (establishmentData: any) => {
+    const newId = `est-${String(establishments.length + 1).padStart(3, '0')}`;
+    
+    const newEstablishment = {
+      ...establishmentData,
+      id: newId,
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+    
+    establishments.push(newEstablishment);
+    return newEstablishment;
+  },
+  
+  update: (updatedEstablishment: any) => {
+    const index = establishments.findIndex(e => e.id === updatedEstablishment.id);
+    if (index === -1) throw new Error(`Establishment with ID ${updatedEstablishment.id} not found`);
+    
+    establishments[index] = updatedEstablishment;
+    return updatedEstablishment;
+  },
+  
+  toggleStatus: (id: string | number) => {
+    const establishment = establishments.find(e => e.id === id);
+    if (!establishment) throw new Error(`Establishment with ID ${id} not found`);
+    
+    establishment.status = establishment.status === 'active' ? 'inactive' : 'active';
+    return establishment;
+  },
+  
+  getPaymentHistory: (id: string | number) => {
+    const establishment = establishments.find(e => e.id === id);
+    if (!establishment) throw new Error(`Establishment with ID ${id} not found`);
+    
+    // Here we would fetch payment history from a real database
+    // For now, return empty array as sample
+    return [];
+  },
+};
+
+export { initializeApiData, establishments };

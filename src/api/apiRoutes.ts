@@ -33,5 +33,15 @@ export const API_ROUTES = {
     kitchen: `${API_BASE_URL}/orders/kitchen`,
     toggleItemPrepared: (orderId: string | number, itemIndex: number) => 
       `${API_BASE_URL}/orders/${orderId}/items/${itemIndex}/toggle-prepared`,
+  },
+
+  // Establishments
+  establishments: {
+    getAll: `${API_BASE_URL}/establishments`,
+    getById: (id: string | number) => `${API_BASE_URL}/establishments/${id}`,
+    create: `${API_BASE_URL}/establishments`,
+    update: (id: string | number) => `${API_BASE_URL}/establishments/${id}`,
+    toggleStatus: (id: string | number) => `${API_BASE_URL}/establishments/${id}/toggle-status`,
+    getPaymentHistory: (id: string | number) => `${API_BASE_URL}/establishments/${id}/payments`,
   }
 };
