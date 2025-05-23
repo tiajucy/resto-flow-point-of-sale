@@ -1,5 +1,5 @@
 
-import { Home, Settings, Clock, Printer, Square } from "lucide-react"
+import { Home, Settings, Clock, Printer, Square, BarChart3 } from "lucide-react"
 import { NavLink, useLocation } from "react-router-dom"
 import {
   Sidebar,
@@ -18,6 +18,7 @@ const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "Produtos", url: "/products", icon: Square },
   { title: "Pedidos", url: "/orders", icon: Clock },
+  { title: "Relatórios", url: "/reports", icon: BarChart3 },
   { title: "Cozinha (KDS)", url: "/kds", icon: Printer },
   { title: "Caixa", url: "/cashier", icon: Square },
   { title: "Configurações", url: "/settings", icon: Settings },
@@ -33,7 +34,7 @@ export function AppSidebar() {
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
       isActive 
-        ? "bg-gradient-primary text-white shadow-lg transform scale-105" 
+        ? "bg-primary text-white shadow-lg transform scale-105" 
         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
     }`
 
