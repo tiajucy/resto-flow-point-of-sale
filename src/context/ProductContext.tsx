@@ -202,7 +202,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
             toast({
               title: "Estoque baixo!",
               description: `${product.name} está com apenas ${remainingStock} unidades em estoque.`,
-              variant: "warning"
+              variant: "default" // Changed from "warning" to "default"
             });
           } else if (remainingStock <= 0) {
             toast({

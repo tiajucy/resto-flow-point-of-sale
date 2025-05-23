@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProducts } from "@/context/ProductContext";
-import { useOrders } from "@/context/OrdersContext";
+import { useOrders, OrderItem } from "@/context/OrdersContext";
 
 // Sample product categories for demonstration
 const productCategories = [
@@ -22,14 +22,7 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
   const { products: inventoryProducts, updateInventoryOnSale } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [searchTerm, setSearchTerm] = useState("");
-  const [orderItems, setOrderItems] = useState<Array<{
-    id: number;
-    productId: number;
-    name: string;
-    price: number;
-    quantity: number;
-    notes: string;
-  }>>([]);
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   
   // For customer details based on order type
   const [tableNumber, setTableNumber] = useState("");
@@ -56,13 +49,14 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
   });
 
   const handleAddItem = (product: any, quantity: number, notes: string) => {
-    const newItem = {
+    const newItem: OrderItem = {
       id: Date.now(),
       productId: product.id,
       name: product.name,
       price: product.price,
       quantity: quantity,
-      notes: notes
+      notes: notes,
+      prepared: false // Add the missing 'prepared' field
     };
     setOrderItems([...orderItems, newItem]);
   };
