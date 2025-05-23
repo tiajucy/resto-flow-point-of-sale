@@ -214,3 +214,36 @@ export const EstablishmentsAPI = {
     return handleResponse(response);
   },
 };
+
+// Reports API
+export const ReportsAPI = {
+  // Get sales data by period (day, week, month)
+  getSales: async (period: string) => {
+    const response = await fetch(API_ROUTES.reports.getSales(period));
+    return handleResponse(response);
+  },
+
+  // Get revenue data by period
+  getRevenue: async (period: string) => {
+    const response = await fetch(API_ROUTES.reports.getRevenue(period));
+    return handleResponse(response);
+  },
+
+  // Get top products by period
+  getTopProducts: async (period: string) => {
+    const response = await fetch(API_ROUTES.reports.getTopProducts(period));
+    return handleResponse(response);
+  },
+
+  // Get order statistics by period
+  getOrderStats: async (period: string) => {
+    const response = await fetch(API_ROUTES.reports.getOrderStats(period));
+    return handleResponse(response);
+  },
+
+  // Get daily activity data
+  getDailyActivity: async () => {
+    const response = await fetch(API_ROUTES.reports.getDailyActivity);
+    return handleResponse(response);
+  },
+};

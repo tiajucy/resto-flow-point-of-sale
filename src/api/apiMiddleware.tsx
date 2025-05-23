@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, ReactNode, useEffect, useState } from "react";
 import { API_ROUTES } from "./apiRoutes";
-import { ProductsHandler, InventoryHandler, OrdersHandler, EstablishmentsHandler, PlansHandler, initializeApiData } from "./apiHandlers";
+import { ProductsHandler, InventoryHandler, OrdersHandler, EstablishmentsHandler, PlansHandler, ReportsHandler, initializeApiData } from "./apiHandlers";
 import { useProducts } from "../context/ProductContext";
 import { useOrders } from "../context/OrdersContext";
 
@@ -130,6 +130,23 @@ export const ApiMiddlewareProvider: React.FC<{ children: ReactNode }> = ({ child
           response = EstablishmentsHandler.getAll();
         } else if (url === API_ROUTES.establishments.create && method === 'POST') {
           response = EstablishmentsHandler.create(body);
+        }
+        
+        // Reports endpoints
+        else if (url.match(/^\/api\/reports\/sales\/\w+$/)) {
+          const period = url.split('/').pop() || 'day';
+          response = ReportsHandler.getSales(period);
+        } else if (url.match(/^\/api\/reports\/revenue\/\w+$/)) {
+          const period = url.split('/').pop() || 'day';
+          response = ReportsHandler.getRevenue(period);
+        } else if (url.match(/^\/api\/reports\/top-products\/\w+$/)) {
+          const period = url.split('/').pop() || 'day';
+          response = ReportsHandler.getTopProducts(period);
+        } else if (url.match(/^\/api\/reports\/order-stats\/\w+$/)) {
+          const period = url.split('/').pop() || 'day';
+          response = ReportsHandler.getOrderStats(period);
+        } else if (url === API_ROUTES.reports.getDailyActivity) {
+          response = ReportsHandler.getDailyActivity();
         }
         
         // If no handler matched

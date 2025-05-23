@@ -14,6 +14,8 @@ import Orders from "./pages/Orders";
 import KitchenDisplay from "./pages/KitchenDisplay";
 import Cashier from "./pages/Cashier";
 import Settings from "./pages/Settings";
+import Reports from "./pages/Reports";
+import EstablishmentPlans from "./pages/EstablishmentPlans";
 import LandingPage from "./pages/LandingPage";
 import NotFound from "./pages/NotFound";
 import SuperAdmin from "./pages/SuperAdmin";
@@ -42,6 +44,8 @@ const App = () => (
                 <Route path="/kds" element={<KitchenDisplay />} />
                 <Route path="/cashier" element={<Cashier />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/plans" element={<EstablishmentPlans />} />
                 <Route path="/admin" element={<Index />} />
                 <Route path="/superadmin" element={<SuperAdmin />} />
                 <Route path="/api-docs" element={<ApiDocs />} />

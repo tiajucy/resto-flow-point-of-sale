@@ -329,9 +329,12 @@ export const EstablishmentsHandler = {
     const today = new Date();
     const paymentDate = today.toISOString().split('T')[0];
     
+    // Convert id to string to ensure type consistency
+    const establishmentIdString = String(id);
+    
     const newPayment = {
       id: paymentHistory.length + 1,
-      establishmentId: id,
+      establishmentId: establishmentIdString,
       planId: planId,
       planName: plan.name,
       amount: plan.price,

@@ -51,5 +51,14 @@ export const API_ROUTES = {
   plans: {
     getAll: `${API_BASE_URL}/plans`,
     getById: (id: string | number) => `${API_BASE_URL}/plans/${id}`,
+  },
+  
+  // Reports
+  reports: {
+    getSales: (period: string) => `${API_BASE_URL}/reports/sales/${period}`,
+    getRevenue: (period: string) => `${API_BASE_URL}/reports/revenue/${period}`,
+    getTopProducts: (period: string) => `${API_BASE_URL}/reports/top-products/${period}`,
+    getOrderStats: (period: string) => `${API_BASE_URL}/reports/order-stats/${period}`,
+    getDailyActivity: `${API_BASE_URL}/reports/daily-activity`,
   }
 };
