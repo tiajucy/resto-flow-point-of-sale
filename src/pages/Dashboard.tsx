@@ -2,7 +2,8 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Clock, Printer, Settings, Square } from "lucide-react"
+import { Clock, Printer, Settings, Square, BookText } from "lucide-react"
+import { Link } from "react-router-dom"
 
 const Dashboard = () => {
   const stats = [
@@ -25,7 +26,7 @@ const Dashboard = () => {
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold text-gray-800">Dashboard</h2>
           <Button className="bg-gradient-primary hover:bg-primary-700 text-white shadow-lg">
-            Novo Pedido
+            <Link to="/orders">Novo Pedido</Link>
           </Button>
         </div>
 
@@ -85,22 +86,30 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" className="h-20 flex flex-col gap-2 hover:bg-primary-50">
-                  <Square className="h-6 w-6" />
-                  <span>Novo Produto</span>
-                </Button>
-                <Button variant="outline" className="h-20 flex flex-col gap-2 hover:bg-primary-50">
-                  <Clock className="h-6 w-6" />
-                  <span>Ver Pedidos</span>
-                </Button>
-                <Button variant="outline" className="h-20 flex flex-col gap-2 hover:bg-primary-50">
-                  <Printer className="h-6 w-6" />
-                  <span>Cozinha</span>
-                </Button>
-                <Button variant="outline" className="h-20 flex flex-col gap-2 hover:bg-primary-50">
-                  <Settings className="h-6 w-6" />
-                  <span>Configurações</span>
-                </Button>
+                <Link to="/products">
+                  <Button variant="outline" className="h-20 w-full flex flex-col gap-2 hover:bg-primary-50">
+                    <Square className="h-6 w-6" />
+                    <span>Novo Produto</span>
+                  </Button>
+                </Link>
+                <Link to="/orders">
+                  <Button variant="outline" className="h-20 w-full flex flex-col gap-2 hover:bg-primary-50">
+                    <Clock className="h-6 w-6" />
+                    <span>Ver Pedidos</span>
+                  </Button>
+                </Link>
+                <Link to="/kds">
+                  <Button variant="outline" className="h-20 w-full flex flex-col gap-2 hover:bg-primary-50">
+                    <Printer className="h-6 w-6" />
+                    <span>Cozinha</span>
+                  </Button>
+                </Link>
+                <Link to="/api-docs">
+                  <Button variant="outline" className="h-20 w-full flex flex-col gap-2 hover:bg-primary-50">
+                    <BookText className="h-6 w-6" />
+                    <span>API Docs</span>
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
