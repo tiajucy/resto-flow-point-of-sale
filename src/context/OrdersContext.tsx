@@ -6,6 +6,7 @@ export interface OrderItem {
   name: string;
   quantity: number;
   notes: string;
+  price?: number; // Adicionando o preço do item
 }
 
 // Define the order interface
@@ -17,6 +18,7 @@ export interface Order {
   time: string;
   elapsedTime: string;
   priority: "Normal" | "Urgente";
+  total: number; // Adicionando o campo total ao pedido
 }
 
 // Context interface
@@ -42,36 +44,39 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       id: "#001",
       customer: "Mesa 5",
       items: [
-        { name: "Hambúrguer Artesanal", quantity: 2, notes: "Sem cebola" },
-        { name: "Batata Frita", quantity: 1, notes: "" }
+        { name: "Hambúrguer Artesanal", quantity: 2, notes: "Sem cebola", price: 25.90 },
+        { name: "Batata Frita", quantity: 1, notes: "", price: 12.00 }
       ],
       status: "Em preparo",
       time: "14:30",
       elapsedTime: "5 min",
-      priority: "Normal"
+      priority: "Normal",
+      total: 63.80
     },
     {
       id: "#004",
       customer: "Mesa 3", 
       items: [
-        { name: "Pizza Calabresa", quantity: 3, notes: "Borda recheada" }
+        { name: "Pizza Calabresa", quantity: 3, notes: "Borda recheada", price: 38.00 }
       ],
       status: "Aguardando",
       time: "14:35",
       elapsedTime: "2 min",
-      priority: "Urgente"
+      priority: "Urgente",
+      total: 114.00
     },
     {
       id: "#005",
       customer: "Balcão",
       items: [
-        { name: "Hambúrguer Simples", quantity: 1, notes: "" },
-        { name: "Refrigerante", quantity: 1, notes: "Gelado" }
+        { name: "Hambúrguer Simples", quantity: 1, notes: "", price: 18.90 },
+        { name: "Refrigerante", quantity: 1, notes: "Gelado", price: 5.00 }
       ],
       status: "Em preparo",
       time: "14:40",
       elapsedTime: "1 min",
-      priority: "Normal"
+      priority: "Normal",
+      total: 23.90
     }
   ]);
 

@@ -68,16 +68,23 @@ const Orders = () => {
           name: item.name,
           quantity: item.quantity,
           notes: item.notes || '',
+          price: item.price || 0, // Adiciona o preço do item
         }));
       }
     }
     
-    // Create the new order
+    // Create the new order with total value
+    const total = orderData.total || orderData.itemDetails?.reduce(
+      (sum: number, item: any) => sum + (item.price * item.quantity), 
+      0
+    ) || 0;
+    
     addOrder({
       customer: customerDisplay,
       items: parsedItems.length > 0 ? parsedItems : [{ name: "Itens não especificados", quantity: 1, notes: "" }],
       status: "Aguardando",
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      total: total, // Adicionar o total
     });
     
     toast.success("Pedido criado com sucesso!");
@@ -135,9 +142,6 @@ const Orders = () => {
               `${item.quantity}x ${item.name}${item.notes ? ` (${item.notes})` : ''}`
             );
             
-            // Calculate total (placeholder for now)
-            const orderTotal = 0;
-            
             return (
               <Card key={order.id} className="bg-white shadow-lg hover:shadow-xl transition-all duration-300">
                 <CardHeader className="pb-3">
@@ -164,7 +168,7 @@ const Orders = () => {
                   
                   <div className="flex items-center justify-between pt-3 border-t border-gray-200">
                     <span className="text-xl font-bold text-primary-600">
-                      R$ {orderTotal.toFixed(2)}
+                      R$ {order.total?.toFixed(2) || "0.00"}
                     </span>
                     <span className="text-sm font-medium text-gray-700">
                       {order.elapsedTime}
