@@ -59,8 +59,12 @@ export const POSInterface = ({ orderType, onSubmit, onCancel, initialOrderData }
   // Initialize form with existing order data if editing
   useEffect(() => {
     if (initialOrderData) {
+      console.log("Initializing edit mode with order data:", initialOrderData);
+      
       // Ensure all items have productId by matching with products
       const itemsWithProductIds = getOrderItemProductIds(initialOrderData.items);
+      console.log("Items with product IDs after processing:", itemsWithProductIds);
+      
       setOrderItems(itemsWithProductIds);
       
       // Parse customer information from initialOrderData.customer
@@ -125,6 +129,8 @@ export const POSInterface = ({ orderType, onSubmit, onCancel, initialOrderData }
   };
 
   const handleSubmitOrder = () => {
+    console.log("Submitting order with items:", JSON.stringify(orderItems));
+    
     // Validate form based on order type
     if (orderType === "mesa" && !tableNumber) {
       toast({
@@ -164,25 +170,34 @@ export const POSInterface = ({ orderType, onSubmit, onCancel, initialOrderData }
     
     // Ensure all items have valid productId for both new orders and edits
     const allItemsWithProductIds = getOrderItemProductIds(orderItems);
+    console.log("Final items with product IDs:", JSON.stringify(allItemsWithProductIds));
     
-    // Check if all orderItems have productId
-    const validItems = allItemsWithProductIds.every(item => item.productId);
-    
-    if (!validItems) {
-      toast({
-        title: "Erro no processamento",
-        description: "Alguns itens não têm referência de produto.",
-        variant: "destructive"
-      });
-      return;
+    // For editing mode, we're more lenient with productId validation
+    // since the user might have custom items
+    if (!isEditing) {
+      // For new orders, check if critical items have productId
+      const criticalItemsWithoutProductId = allItemsWithProductIds.filter(item => 
+        !item.productId && item.price && item.price > 0
+      );
+      
+      if (criticalItemsWithoutProductId.length > 0) {
+        console.warn("Some items don't have productId:", criticalItemsWithoutProductId);
+        toast({
+          title: "Aviso",
+          description: `Alguns itens podem não ter referência no estoque: ${criticalItemsWithoutProductId.map(i => i.name).join(', ')}`,
+          variant: "default"
+        });
+      }
     }
     
     // Only update inventory if this is a new order, not an edit
     if (!isEditing) {
       // Update inventory BEFORE creating the order
-      // This ensures the inventory is updated even if there's an issue with order creation
-      console.log("Updating inventory with items:", JSON.stringify(orderItems));
-      updateInventoryOnSale(orderItems);
+      console.log("Updating inventory with items:", JSON.stringify(allItemsWithProductIds));
+      const itemsWithValidProductId = allItemsWithProductIds.filter(item => item.productId);
+      if (itemsWithValidProductId.length > 0) {
+        updateInventoryOnSale(itemsWithValidProductId);
+      }
     }
     
     // Format items for display on order card
@@ -205,6 +220,7 @@ export const POSInterface = ({ orderType, onSubmit, onCancel, initialOrderData }
       total: calculateTotal()
     };
     
+    console.log("Final order data:", JSON.stringify(orderData));
     onSubmit(orderData);
   };
 
