@@ -35,7 +35,7 @@ export function AppSidebar() {
     `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
       isActive 
         ? "bg-primary text-white shadow-lg transform scale-105" 
-        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+        : "text-gray-800 hover:bg-gray-100 hover:text-primary"
     }`
 
   return (
@@ -43,7 +43,7 @@ export function AppSidebar() {
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">POS</span>
             </div>
             <span className="font-bold text-xl text-gray-800">RestaurantePOS</span>
