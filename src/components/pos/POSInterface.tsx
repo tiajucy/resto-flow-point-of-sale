@@ -1,25 +1,15 @@
+
 import { useState } from "react";
 import { ProductList } from "./ProductList";
 import { OrderSummary } from "./OrderSummary";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useProducts } from "@/context/ProductContext";
 
 // Sample product categories for demonstration
 const productCategories = [
   "Todos", "Lanches", "Pizzas", "Bebidas", "Sobremesas", "Acompanhamentos"
-];
-
-// Sample products for demonstration
-const sampleProducts = [
-  { id: 1, name: "Hambúrguer Artesanal", category: "Lanches", price: 25.90, image: "/placeholder.svg" },
-  { id: 2, name: "Pizza Margherita", category: "Pizzas", price: 35.50, image: "/placeholder.svg" },
-  { id: 3, name: "Refrigerante Lata", category: "Bebidas", price: 5.00, image: "/placeholder.svg" },
-  { id: 4, name: "Batata Frita", category: "Acompanhamentos", price: 12.00, image: "/placeholder.svg" },
-  { id: 5, name: "Sorvete", category: "Sobremesas", price: 8.50, image: "/placeholder.svg" },
-  { id: 6, name: "X-Tudo", category: "Lanches", price: 29.90, image: "/placeholder.svg" },
-  { id: 7, name: "Pizza Calabresa", category: "Pizzas", price: 38.00, image: "/placeholder.svg" },
-  { id: 8, name: "Água Mineral", category: "Bebidas", price: 3.00, image: "/placeholder.svg" },
 ];
 
 interface POSInterfaceProps {
@@ -29,6 +19,7 @@ interface POSInterfaceProps {
 }
 
 export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProps) => {
+  const { products: inventoryProducts } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [orderItems, setOrderItems] = useState<Array<{
@@ -48,8 +39,17 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
   const [reference, setReference] = useState("");
   const [deliveryFee, setDeliveryFee] = useState(0);
 
+  // Use real product data from our inventory
+  const availableProducts = inventoryProducts.map(product => ({
+    id: product.id,
+    name: product.name,
+    category: product.category,
+    price: product.price,
+    image: product.image || "/placeholder.svg"
+  }));
+
   // Filter products by category and search term
-  const filteredProducts = sampleProducts.filter(product => {
+  const filteredProducts = availableProducts.filter(product => {
     const matchesCategory = selectedCategory === "Todos" || product.category === selectedCategory;
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;

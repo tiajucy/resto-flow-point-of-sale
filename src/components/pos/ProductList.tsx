@@ -111,11 +111,25 @@ export const ProductList = ({ products, onAddItem }: ProductListProps) => {
               onClick={() => handleProductClick(product)}
             >
               <div className="aspect-square bg-gray-100 overflow-hidden relative">
+                {/* Use the correct image path or placeholder if image is not valid */}
                 <img 
-                  src={product.image} 
+                  src={product.image || "/placeholder.svg"} 
                   alt={product.name} 
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to placeholder if image fails to load
+                    (e.target as HTMLImageElement).src = "/placeholder.svg";
+                  }}
                 />
+                
+                {/* Stock badge in top-right corner */}
+                <Badge 
+                  variant="secondary" 
+                  className="absolute top-2 right-2 text-xs font-medium bg-green-500 text-white z-10"
+                >
+                  {stock}
+                </Badge>
+                
                 {outOfStock && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
                     <Badge variant="destructive" className="text-xs font-bold">
@@ -130,22 +144,17 @@ export const ProductList = ({ products, onAddItem }: ProductListProps) => {
                   <span className="text-primary-700 font-bold">
                     R$ {product.price.toFixed(2)}
                   </span>
-                  <div className="flex items-center gap-1">
-                    <Badge variant="secondary" className="text-xs">
-                      {stock}
-                    </Badge>
-                    <Button 
-                      size="sm" 
-                      className="h-7 w-7 p-0 rounded-full"
-                      disabled={outOfStock}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleProductClick(product);
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Button 
+                    size="sm" 
+                    className="h-7 w-7 p-0 rounded-full"
+                    disabled={outOfStock}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleProductClick(product);
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </Card>
@@ -163,6 +172,18 @@ export const ProductList = ({ products, onAddItem }: ProductListProps) => {
               </DialogHeader>
               
               <div className="py-4 space-y-4">
+                {/* Show product image in dialog */}
+                <div className="w-full h-40 bg-gray-100 rounded-md overflow-hidden">
+                  <img
+                    src={selectedProduct.image || "/placeholder.svg"}
+                    alt={selectedProduct.name}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "/placeholder.svg";
+                    }}
+                  />
+                </div>
+                
                 <div className="flex items-center justify-between">
                   <div className="font-medium">Preço unitário:</div>
                   <div className="font-bold text-primary-700">
