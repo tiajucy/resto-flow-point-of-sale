@@ -20,24 +20,30 @@ export interface Order {
   elapsedTime: string;
   priority: "Normal" | "Urgente";
   total: number;
+  paid?: boolean; // Track if order has been paid
+  paymentMethod?: "Dinheiro" | "Cartão" | "PIX" | null;
 }
 
 // Context interface
 interface OrdersContextType {
   orders: Order[];
   kitchenOrders: Order[];
+  pendingPaymentOrders: Order[]; // Add orders awaiting payment
   addOrder: (order: Omit<Order, "id" | "elapsedTime" | "priority">) => void;
   updateOrderStatus: (id: string, status: Order["status"]) => void;
-  toggleItemPrepared: (orderId: string, itemIndex: number) => void; // Add new function
+  toggleItemPrepared: (orderId: string, itemIndex: number) => void;
+  markOrderAsPaid: (orderId: string, paymentMethod: Order["paymentMethod"]) => void; // Add payment function
 }
 
 // Create context with default values
 const OrdersContext = createContext<OrdersContextType>({
   orders: [],
   kitchenOrders: [],
+  pendingPaymentOrders: [],
   addOrder: () => {},
   updateOrderStatus: () => {},
-  toggleItemPrepared: () => {}, // Add to default context
+  toggleItemPrepared: () => {},
+  markOrderAsPaid: () => {},
 });
 
 // Provider component
@@ -87,6 +93,11 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
   const kitchenOrders = orders.filter(
     order => ["Aguardando", "Em preparo"].includes(order.status)
   );
+  
+  // Filter orders that are delivered but not paid
+  const pendingPaymentOrders = orders.filter(
+    order => order.status === "Entregue" && !order.paid
+  );
 
   // Add a new order
   const addOrder = (orderData: Omit<Order, "id" | "elapsedTime" | "priority">) => {
@@ -118,7 +129,7 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
     );
   };
   
-  // Toggle item preparation status - FIX THE BUG HERE
+  // Toggle item preparation status
   const toggleItemPrepared = (orderId: string, itemIndex: number) => {
     setOrders(
       orders.map(order => {
@@ -142,15 +153,28 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       })
     );
   };
+  
+  // Mark order as paid
+  const markOrderAsPaid = (orderId: string, paymentMethod: Order["paymentMethod"]) => {
+    setOrders(
+      orders.map(order => 
+        order.id === orderId 
+          ? { ...order, paid: true, paymentMethod } 
+          : order
+      )
+    );
+  };
 
   return (
     <OrdersContext.Provider 
       value={{ 
         orders, 
         kitchenOrders,
+        pendingPaymentOrders,
         addOrder, 
         updateOrderStatus,
-        toggleItemPrepared 
+        toggleItemPrepared,
+        markOrderAsPaid
       }}
     >
       {children}
