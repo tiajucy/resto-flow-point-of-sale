@@ -1,12 +1,12 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProductList } from "./ProductList";
 import { OrderSummary } from "./OrderSummary";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProducts } from "@/context/ProductContext";
-import { useOrders, OrderItem } from "@/context/OrdersContext";
+import { useOrders, OrderItem, Order } from "@/context/OrdersContext";
 import { toast } from "@/hooks/use-toast";
 
 // Sample product categories for demonstration
@@ -18,9 +18,10 @@ interface POSInterfaceProps {
   orderType: "mesa" | "retirada" | "delivery";
   onSubmit: (data: any) => void;
   onCancel: () => void;
+  initialOrderData?: Order;
 }
 
-export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProps) => {
+export const POSInterface = ({ orderType, onSubmit, onCancel, initialOrderData }: POSInterfaceProps) => {
   const { products: inventoryProducts, updateInventoryOnSale } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,6 +34,9 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
   const [address, setAddress] = useState("");
   const [reference, setReference] = useState("");
   const [deliveryFee, setDeliveryFee] = useState(0);
+  
+  // For editing mode
+  const isEditing = !!initialOrderData;
 
   // Use real product data from our inventory, including status
   const availableProducts = inventoryProducts.map(product => ({
@@ -50,6 +54,33 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+  
+  // Initialize form with existing order data if editing
+  useEffect(() => {
+    if (initialOrderData) {
+      setOrderItems(initialOrderData.items);
+      
+      // Parse customer information from initialOrderData.customer
+      const customer = initialOrderData.customer;
+      
+      if (orderType === "mesa" && customer.includes("Mesa")) {
+        const tableMatch = customer.match(/Mesa\s+(\d+)/);
+        if (tableMatch) {
+          setTableNumber(tableMatch[1]);
+        }
+      } else if (orderType === "retirada" && customer.includes("Balcão")) {
+        const nameMatch = customer.match(/Balcão\s+-\s+(.+)/);
+        if (nameMatch) {
+          setCustomerName(nameMatch[1]);
+        }
+      } else if (orderType === "delivery" && customer.includes("Delivery")) {
+        const nameMatch = customer.match(/Delivery\s+-\s+(.+)/);
+        if (nameMatch) {
+          setCustomerName(nameMatch[1]);
+        }
+      }
+    }
+  }, [initialOrderData, orderType]);
 
   const handleAddItem = (product: any, quantity: number, notes: string) => {
     const newItem: OrderItem = {
@@ -73,6 +104,12 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
     
     setOrderItems(orderItems.map(item => 
       item.id === id ? { ...item, quantity: newQuantity } : item
+    ));
+  };
+  
+  const handleNotesChange = (id: number, notes: string) => {
+    setOrderItems(orderItems.map(item => 
+      item.id === id ? { ...item, notes } : item
     ));
   };
 
@@ -134,10 +171,13 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
       return;
     }
     
-    // Update inventory BEFORE creating the order
-    // This ensures the inventory is updated even if there's an issue with order creation
-    console.log("Updating inventory with items:", JSON.stringify(orderItems));
-    updateInventoryOnSale(orderItems);
+    // Only update inventory if this is a new order, not an edit
+    if (!isEditing) {
+      // Update inventory BEFORE creating the order
+      // This ensures the inventory is updated even if there's an issue with order creation
+      console.log("Updating inventory with items:", JSON.stringify(orderItems));
+      updateInventoryOnSale(orderItems);
+    }
     
     // Format items for display on order card
     const formattedItems = orderItems.map(item => {
@@ -155,7 +195,8 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
       reference,
       deliveryFee,
       items: formattedItems,
-      itemDetails: orderItems // Keep detailed version for future reference
+      itemDetails: orderItems, // Keep detailed version for future reference
+      total: calculateTotal()
     };
     
     onSubmit(orderData);
@@ -166,8 +207,9 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
       <div className="p-4 border-b bg-white">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold">
-            {orderType === "mesa" ? "Pedido de Mesa" : 
-             orderType === "retirada" ? "Pedido de Retirada" : "Pedido de Delivery"}
+            {isEditing ? "Editar Pedido" : 
+              orderType === "mesa" ? "Pedido de Mesa" : 
+              orderType === "retirada" ? "Pedido de Retirada" : "Pedido de Delivery"}
           </h2>
           <Button variant="outline" onClick={onCancel}>Fechar</Button>
         </div>
@@ -294,6 +336,7 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
               items={orderItems}
               onRemoveItem={handleRemoveItem}
               onQuantityChange={handleQuantityChange}
+              onNotesChange={handleNotesChange}
               total={calculateTotal()}
               deliveryFee={orderType === "delivery" ? deliveryFee : 0}
             />
@@ -305,7 +348,7 @@ export const POSInterface = ({ orderType, onSubmit, onCancel }: POSInterfaceProp
               className="w-full bg-green-600 hover:bg-green-700 h-12 text-lg"
               disabled={orderItems.length === 0}
             >
-              Finalizar Pedido • R$ {calculateTotal().toFixed(2)}
+              {isEditing ? "Atualizar Pedido" : "Finalizar Pedido"} • R$ {calculateTotal().toFixed(2)}
             </Button>
           </div>
         </div>

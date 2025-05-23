@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,13 +10,15 @@ import { POSInterface } from "@/components/pos/POSInterface"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { useOrders, Order, OrderItem } from "@/context/OrdersContext"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Edit } from "lucide-react"
 
 const Orders = () => {
   const [selectedStatus, setSelectedStatus] = useState("Todos")
   const [isNewOrderDialogOpen, setIsNewOrderDialogOpen] = useState(false)
   const [isPOSOpen, setIsPOSOpen] = useState(false)
   const [currentOrderType, setCurrentOrderType] = useState<"mesa" | "retirada" | "delivery" | null>(null)
-  const { orders, addOrder, updateOrderStatus, toggleItemPrepared, updateInventoryOnSale } = useOrders();
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null)
+  const { orders, addOrder, updateOrderStatus, toggleItemPrepared, updateInventoryOnSale, updateOrder } = useOrders();
 
   const statusOptions = ["Todos", "Aguardando", "Em preparo", "Pronto", "Entregue"]
 
@@ -96,9 +97,44 @@ const Orders = () => {
     setIsPOSOpen(false);
   }
 
-  const openPOS = (orderType: "mesa" | "retirada" | "delivery") => {
+  const openPOS = (orderType: "mesa" | "retirada" | "delivery", order?: Order) => {
     setCurrentOrderType(orderType);
+    if (order) {
+      setEditingOrder(order);
+    }
     setIsPOSOpen(true);
+  }
+
+  const handleEditOrder = (order: Order) => {
+    // Extract order type from customer string
+    let orderType: "mesa" | "retirada" | "delivery" = "mesa";
+    if (order.customer.includes("Mesa")) {
+      orderType = "mesa";
+    } else if (order.customer.includes("Balcão")) {
+      orderType = "retirada";
+    } else if (order.customer.includes("Delivery")) {
+      orderType = "delivery";
+    }
+    
+    openPOS(orderType, order);
+  }
+  
+  const handleOrderUpdate = (updatedOrderData: any) => {
+    if (!editingOrder) return;
+    
+    // Update the existing order
+    updateOrder({
+      ...editingOrder,
+      items: updatedOrderData.itemDetails || [],
+      total: updatedOrderData.total || updatedOrderData.itemDetails?.reduce(
+        (sum: number, item: any) => sum + (item.price * item.quantity), 
+        0
+      ) || editingOrder.total
+    });
+    
+    toast.success("Pedido atualizado com sucesso!");
+    setIsPOSOpen(false);
+    setEditingOrder(null);
   }
 
   const handleStatusUpdate = (orderId: string, newStatus: Order["status"]) => {
@@ -221,6 +257,17 @@ const Orders = () => {
                         Entregar
                       </Button>
                     )}
+                    {/* Edit button - small to preserve layout */}
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      className="h-9 w-9"
+                      onClick={() => handleEditOrder(order)}
+                      disabled={order.status === "Entregue"}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    
                     <Button variant="outline" size="sm" className="flex-1">
                       Detalhes
                     </Button>
@@ -270,14 +317,18 @@ const Orders = () => {
         </DialogContent>
       </Dialog>
 
-      {/* POS Interface */}
+      {/* POS Interface for New/Edit Order */}
       <Sheet open={isPOSOpen} onOpenChange={setIsPOSOpen}>
         <SheetContent side="right" className="w-full sm:max-w-full md:max-w-4xl p-0 overflow-y-auto">
           {currentOrderType && (
             <POSInterface 
               orderType={currentOrderType} 
-              onSubmit={handleNewOrder}
-              onCancel={() => setIsPOSOpen(false)}
+              onSubmit={editingOrder ? handleOrderUpdate : handleNewOrder}
+              onCancel={() => {
+                setIsPOSOpen(false);
+                setEditingOrder(null);
+              }}
+              initialOrderData={editingOrder || undefined}
             />
           )}
         </SheetContent>

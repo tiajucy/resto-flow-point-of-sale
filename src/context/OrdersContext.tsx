@@ -36,6 +36,7 @@ interface OrdersContextType {
   toggleItemPrepared: (orderId: string, itemIndex: number) => void;
   markOrderAsPaid: (orderId: string, paymentMethod: Order["paymentMethod"]) => void; // Add payment function
   updateInventoryOnSale: (items: OrderItem[]) => void; // Add inventory update function
+  updateOrder: (order: Order) => void; // Add update order function
 }
 
 // Create context with default values
@@ -47,7 +48,8 @@ const OrdersContext = createContext<OrdersContextType>({
   updateOrderStatus: () => {},
   toggleItemPrepared: () => {},
   markOrderAsPaid: () => {},
-  updateInventoryOnSale: () => {}
+  updateInventoryOnSale: () => {},
+  updateOrder: () => {}
 });
 
 // Provider component
@@ -172,6 +174,15 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
     );
   };
   
+  // Update an existing order
+  const updateOrder = (updatedOrder: Order) => {
+    setOrders(
+      orders.map(order => 
+        order.id === updatedOrder.id ? updatedOrder : order
+      )
+    );
+  };
+  
   // Update inventory when a sale occurs - pass to ProductContext
   const updateInventoryOnSale = (items: OrderItem[]) => {
     // Forward the call to the ProductContext
@@ -188,7 +199,8 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
         updateOrderStatus,
         toggleItemPrepared,
         markOrderAsPaid,
-        updateInventoryOnSale
+        updateInventoryOnSale,
+        updateOrder
       }}
     >
       {children}

@@ -1,12 +1,17 @@
+
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Minus, Plus, Trash2, Edit2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { OrderItem } from "@/context/OrdersContext";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface OrderSummaryProps {
   items: OrderItem[];
   onRemoveItem: (id: number) => void;
   onQuantityChange: (id: number, quantity: number) => void;
+  onNotesChange?: (id: number, notes: string) => void;
   total: number;
   deliveryFee?: number;
 }
@@ -15,10 +20,25 @@ export const OrderSummary = ({
   items, 
   onRemoveItem, 
   onQuantityChange,
+  onNotesChange,
   total,
   deliveryFee = 0
 }: OrderSummaryProps) => {
   const subtotal = total - deliveryFee;
+  const [editingNotes, setEditingNotes] = useState<number | null>(null);
+  const [editNoteText, setEditNoteText] = useState("");
+
+  const handleEditNotes = (id: number, currentNotes: string) => {
+    setEditingNotes(id);
+    setEditNoteText(currentNotes);
+  };
+
+  const saveNotes = (id: number) => {
+    if (onNotesChange) {
+      onNotesChange(id, editNoteText);
+    }
+    setEditingNotes(null);
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -58,8 +78,49 @@ export const OrderSummary = ({
                       </Button>
                     </div>
 
-                    {item.notes && (
-                      <p className="text-sm text-gray-500 mb-2">{item.notes}</p>
+                    {editingNotes === item.id ? (
+                      <div className="mb-2">
+                        <Textarea
+                          placeholder="Observações (ex: sem cebola)"
+                          value={editNoteText}
+                          onChange={(e) => setEditNoteText(e.target.value)}
+                          className="text-sm resize-none h-16 mb-2"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditingNotes(null)}
+                            className="text-xs h-7"
+                          >
+                            Cancelar
+                          </Button>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => saveNotes(item.id)}
+                            className="text-xs h-7"
+                          >
+                            Salvar
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between mb-2">
+                        <p className="text-sm text-gray-500">
+                          {item.notes || "Sem observações"}
+                        </p>
+                        {onNotesChange && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditNotes(item.id, item.notes)}
+                            className="h-5 w-5 p-0 text-blue-500 hover:text-blue-700"
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
                     )}
 
                     <div className="flex items-center justify-between">
