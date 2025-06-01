@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -15,7 +14,7 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ productId, onClose }: ProductFormProps) {
-  const { products, addProduct, updateProduct } = useProducts();
+  const { products, addProduct, updateProduct, currentEstablishmentId } = useProducts();
   
   const [formData, setFormData] = useState({
     name: "",
@@ -80,7 +79,8 @@ export function ProductForm({ productId, onClose }: ProductFormProps) {
         category: formData.category,
         stock,
         status: formData.status,
-        image: previewImage
+        image: previewImage,
+        establishmentId: currentEstablishmentId
       };
       
       if (isEditing && productId) {

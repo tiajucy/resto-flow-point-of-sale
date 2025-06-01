@@ -16,15 +16,15 @@ const ApiMiddlewareContext = createContext<ApiMiddlewareContextType>({
 export const useApiMiddleware = () => useContext(ApiMiddlewareContext);
 
 export const ApiMiddlewareProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { products, inventoryTransactions } = useProducts();
+  const { products, inventoryTransactions, currentEstablishmentId } = useProducts();
   const { orders } = useOrders();
   const [isApiReady, setIsApiReady] = useState(false);
 
   // Initialize the API with state from contexts
   useEffect(() => {
-    initializeApiData(products, inventoryTransactions, orders);
+    initializeApiData(products, inventoryTransactions, orders, currentEstablishmentId);
     setIsApiReady(true);
-  }, [products, inventoryTransactions, orders]);
+  }, [products, inventoryTransactions, orders, currentEstablishmentId]);
 
   // Mock API by intercepting fetch requests
   useEffect(() => {
@@ -54,48 +54,48 @@ export const ApiMiddlewareProvider: React.FC<{ children: ReactNode }> = ({ child
           const id = parseInt(url.split('/').pop() || '0');
           
           if (method === 'GET') {
-            response = ProductsHandler.getById(id);
+            response = ProductsHandler.getById(id, currentEstablishmentId);
           } else if (method === 'PUT') {
-            response = ProductsHandler.update(body);
+            response = ProductsHandler.update(body, currentEstablishmentId);
           } else if (method === 'DELETE') {
-            response = ProductsHandler.delete(id);
+            response = ProductsHandler.delete(id, currentEstablishmentId);
           }
         } else if (url === API_ROUTES.products.getAll) {
-          response = ProductsHandler.getAll();
+          response = ProductsHandler.getAll(currentEstablishmentId);
         } else if (url === API_ROUTES.products.create && method === 'POST') {
-          response = ProductsHandler.create(body);
+          response = ProductsHandler.create(body, currentEstablishmentId);
         } else if (url === API_ROUTES.products.lowStock) {
-          response = ProductsHandler.getLowStock();
+          response = ProductsHandler.getLowStock(currentEstablishmentId);
         }
         
         // Inventory endpoints
         else if (url === API_ROUTES.inventory.getAll) {
-          response = InventoryHandler.getAll();
+          response = InventoryHandler.getAll(currentEstablishmentId);
         } else if (url === API_ROUTES.inventory.addTransaction && method === 'POST') {
-          response = InventoryHandler.addTransaction(body);
+          response = InventoryHandler.addTransaction(body, currentEstablishmentId);
         } else if (url.match(/^\/api\/inventory\/product\/\d+$/)) {
           const productId = parseInt(url.split('/').pop() || '0');
-          response = InventoryHandler.getByProduct(productId);
+          response = InventoryHandler.getByProduct(productId, currentEstablishmentId);
         }
         
         // Orders endpoints
         else if (url.match(/^\/api\/orders\/[\w-]+\/status$/) && method === 'PATCH') {
           const orderId = url.split('/')[3];
-          response = OrdersHandler.updateStatus(orderId, body.status);
+          response = OrdersHandler.updateStatus(orderId, body.status, currentEstablishmentId);
         } else if (url.match(/^\/api\/orders\/[\w-]+\/items\/\d+\/toggle-prepared$/) && method === 'PATCH') {
           const parts = url.split('/');
           const orderId = parts[3];
           const itemIndex = parseInt(parts[5]);
-          response = OrdersHandler.toggleItemPrepared(orderId, itemIndex);
+          response = OrdersHandler.toggleItemPrepared(orderId, itemIndex, currentEstablishmentId);
         } else if (url.match(/^\/api\/orders\/[\w-]+$/)) {
           const orderId = url.split('/').pop() || '';
-          response = OrdersHandler.getById(orderId);
+          response = OrdersHandler.getById(orderId, currentEstablishmentId);
         } else if (url === API_ROUTES.orders.getAll) {
-          response = OrdersHandler.getAll();
+          response = OrdersHandler.getAll(currentEstablishmentId);
         } else if (url === API_ROUTES.orders.create && method === 'POST') {
-          response = OrdersHandler.create(body);
+          response = OrdersHandler.create(body, currentEstablishmentId);
         } else if (url === API_ROUTES.orders.kitchen) {
-          response = OrdersHandler.getKitchenOrders();
+          response = OrdersHandler.getKitchenOrders(currentEstablishmentId);
         }
         
         // Plans endpoints
@@ -135,18 +135,18 @@ export const ApiMiddlewareProvider: React.FC<{ children: ReactNode }> = ({ child
         // Reports endpoints
         else if (url.match(/^\/api\/reports\/sales\/\w+$/)) {
           const period = url.split('/').pop() || 'day';
-          response = ReportsHandler.getSales(period);
+          response = ReportsHandler.getSales(period, currentEstablishmentId);
         } else if (url.match(/^\/api\/reports\/revenue\/\w+$/)) {
           const period = url.split('/').pop() || 'day';
-          response = ReportsHandler.getRevenue(period);
+          response = ReportsHandler.getRevenue(period, currentEstablishmentId);
         } else if (url.match(/^\/api\/reports\/top-products\/\w+$/)) {
           const period = url.split('/').pop() || 'day';
-          response = ReportsHandler.getTopProducts(period);
+          response = ReportsHandler.getTopProducts(period, currentEstablishmentId);
         } else if (url.match(/^\/api\/reports\/order-stats\/\w+$/)) {
           const period = url.split('/').pop() || 'day';
-          response = ReportsHandler.getOrderStats(period);
+          response = ReportsHandler.getOrderStats(period, currentEstablishmentId);
         } else if (url === API_ROUTES.reports.getDailyActivity) {
-          response = ReportsHandler.getDailyActivity();
+          response = ReportsHandler.getDailyActivity(currentEstablishmentId);
         }
         
         // If no handler matched
@@ -177,7 +177,7 @@ export const ApiMiddlewareProvider: React.FC<{ children: ReactNode }> = ({ child
     return () => {
       window.fetch = originalFetch;
     };
-  }, [isApiReady]);
+  }, [isApiReady, currentEstablishmentId]);
   
   return (
     <ApiMiddlewareContext.Provider value={{ isApiReady }}>

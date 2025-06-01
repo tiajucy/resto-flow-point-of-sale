@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useProducts, Product, InventoryTransaction } from "@/context/ProductContext";
 import { Input } from "@/components/ui/input";
@@ -13,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
 export function InventoryManagement() {
-  const { products, inventoryTransactions, addInventoryTransaction } = useProducts();
+  const { products, inventoryTransactions, addInventoryTransaction, currentEstablishmentId } = useProducts();
   const [showTransactionForm, setShowTransactionForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"todos" | "entrada" | "saída" | "ajuste">("todos");
@@ -65,7 +64,8 @@ export function InventoryManagement() {
         productId: selectedProduct.id,
         type: transactionData.type,
         quantity,
-        reason: transactionData.reason
+        reason: transactionData.reason,
+        establishmentId: currentEstablishmentId
       });
       
       // Reset form and close dialog
