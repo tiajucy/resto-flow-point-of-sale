@@ -1,3 +1,4 @@
+
 import { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { OrderItem } from "./OrdersContext";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +12,7 @@ export interface Product {
   image: string;
   stock: number;
   status: "Ativo" | "Inativo";
+  establishmentId: string; // Add establishment isolation
 }
 
 export interface InventoryTransaction {
@@ -20,6 +22,7 @@ export interface InventoryTransaction {
   quantity: number;
   date: string;
   reason: string;
+  establishmentId: string; // Add establishment isolation
 }
 
 interface ProductContextType {
@@ -31,6 +34,8 @@ interface ProductContextType {
   addInventoryTransaction: (transaction: Omit<InventoryTransaction, "id" | "date">) => void;
   updateInventoryOnSale: (items: OrderItem[]) => void;
   lowStockProducts: Product[];
+  currentEstablishmentId: string;
+  setCurrentEstablishmentId: (id: string) => void;
 }
 
 const ProductContext = createContext<ProductContextType>({
@@ -42,21 +47,35 @@ const ProductContext = createContext<ProductContextType>({
   addInventoryTransaction: () => {},
   updateInventoryOnSale: () => {},
   lowStockProducts: [],
+  currentEstablishmentId: "est-001",
+  setCurrentEstablishmentId: () => {},
 });
 
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   
-  const [products, setProducts] = useState<Product[]>([
-    { id: 1, name: "Hambúrguer Artesanal", category: "Lanches", price: 25.90, status: "Ativo", image: "/placeholder.svg", description: "Hambúrguer artesanal grelhado com queijo e bacon", stock: 20 },
-    { id: 2, name: "Pizza Margherita", category: "Pizzas", price: 35.50, status: "Ativo", image: "/placeholder.svg", description: "Pizza tradicional com molho de tomate, queijo e manjericão", stock: 15 },
-    { id: 3, name: "Refrigerante Lata", category: "Bebidas", price: 5.00, status: "Ativo", image: "/placeholder.svg", description: "Refrigerante em lata 350ml", stock: 50 },
-    { id: 4, name: "Batata Frita", category: "Acompanhamentos", price: 12.00, status: "Ativo", image: "/placeholder.svg", description: "Porção de batatas fritas crocantes", stock: 30 },
+  // Current establishment context - in a real app this would come from authentication
+  const [currentEstablishmentId, setCurrentEstablishmentId] = useState<string>("est-001");
+  
+  const [allProducts, setAllProducts] = useState<Product[]>([
+    { id: 1, name: "Hambúrguer Artesanal", category: "Lanches", price: 25.90, status: "Ativo", image: "/placeholder.svg", description: "Hambúrguer artesanal grelhado com queijo e bacon", stock: 20, establishmentId: "est-001" },
+    { id: 2, name: "Pizza Margherita", category: "Pizzas", price: 35.50, status: "Ativo", image: "/placeholder.svg", description: "Pizza tradicional com molho de tomate, queijo e manjericão", stock: 15, establishmentId: "est-001" },
+    { id: 3, name: "Refrigerante Lata", category: "Bebidas", price: 5.00, status: "Ativo", image: "/placeholder.svg", description: "Refrigerante em lata 350ml", stock: 50, establishmentId: "est-001" },
+    { id: 4, name: "Batata Frita", category: "Acompanhamentos", price: 12.00, status: "Ativo", image: "/placeholder.svg", description: "Porção de batatas fritas crocantes", stock: 30, establishmentId: "est-001" },
+    // Sample data for another establishment
+    { id: 5, name: "Sushi Salmão", category: "Japonês", price: 18.90, status: "Ativo", image: "/placeholder.svg", description: "Sushi fresco de salmão", stock: 25, establishmentId: "est-002" },
+    { id: 6, name: "Temaki Atum", category: "Japonês", price: 22.50, status: "Ativo", image: "/placeholder.svg", description: "Temaki de atum com cream cheese", stock: 18, establishmentId: "est-002" },
   ]);
   
-  const [inventoryTransactions, setInventoryTransactions] = useState<InventoryTransaction[]>([]);
+  const [allInventoryTransactions, setAllInventoryTransactions] = useState<InventoryTransaction[]>([]);
   
-  // Calculate low stock products (less than 10 items)
+  // Filter products by current establishment
+  const products = allProducts.filter(product => product.establishmentId === currentEstablishmentId);
+  
+  // Filter inventory transactions by current establishment
+  const inventoryTransactions = allInventoryTransactions.filter(transaction => transaction.establishmentId === currentEstablishmentId);
+  
+  // Calculate low stock products (less than 10 items) for current establishment only
   const lowStockProducts = products.filter(product => product.stock < 10);
   
   // Show alert for low stock products
@@ -72,14 +91,15 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   
   // Add a new product
   const addProduct = (productData: Omit<Product, "id">) => {
-    const newId = products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
+    const newId = allProducts.length ? Math.max(...allProducts.map(p => p.id)) + 1 : 1;
     
     const newProduct: Product = {
       id: newId,
       ...productData,
+      establishmentId: currentEstablishmentId, // Assign to current establishment
     };
     
-    setProducts([...products, newProduct]);
+    setAllProducts([...allProducts, newProduct]);
     
     // Add initial inventory transaction
     if (productData.stock > 0) {
@@ -87,7 +107,8 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         productId: newId,
         type: "entrada",
         quantity: productData.stock,
-        reason: "Estoque inicial"
+        reason: "Estoque inicial",
+        establishmentId: currentEstablishmentId,
       });
     }
     
@@ -99,10 +120,20 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   
   // Update an existing product
   const updateProduct = (updatedProduct: Product) => {
-    const oldProduct = products.find(p => p.id === updatedProduct.id);
+    // Ensure the product belongs to current establishment
+    if (updatedProduct.establishmentId !== currentEstablishmentId) {
+      toast({
+        title: "Erro",
+        description: "Você não tem permissão para editar este produto.",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    setProducts(
-      products.map(product => 
+    const oldProduct = allProducts.find(p => p.id === updatedProduct.id);
+    
+    setAllProducts(
+      allProducts.map(product => 
         product.id === updatedProduct.id ? updatedProduct : product
       )
     );
@@ -115,7 +146,8 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         productId: updatedProduct.id,
         type: difference > 0 ? "entrada" : "ajuste",
         quantity: Math.abs(difference),
-        reason: "Ajuste de estoque"
+        reason: "Ajuste de estoque",
+        establishmentId: currentEstablishmentId,
       });
     }
     
@@ -127,31 +159,39 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   
   // Delete a product
   const deleteProduct = (id: number) => {
-    const productToDelete = products.find(p => p.id === id);
+    const productToDelete = allProducts.find(p => p.id === id && p.establishmentId === currentEstablishmentId);
     
-    if (productToDelete) {
-      setProducts(products.filter(product => product.id !== id));
-      
+    if (!productToDelete) {
       toast({
-        title: "Produto excluído",
-        description: `${productToDelete.name} foi removido do catálogo.`
+        title: "Erro",
+        description: "Produto não encontrado ou você não tem permissão para excluí-lo.",
+        variant: "destructive"
       });
+      return;
     }
+    
+    setAllProducts(allProducts.filter(product => product.id !== id));
+    
+    toast({
+      title: "Produto excluído",
+      description: `${productToDelete.name} foi removido do catálogo.`
+    });
   };
   
   // Add a new inventory transaction
   const addInventoryTransaction = (transactionData: Omit<InventoryTransaction, "id" | "date">) => {
-    const newId = inventoryTransactions.length 
-      ? Math.max(...inventoryTransactions.map(t => t.id)) + 1 
+    const newId = allInventoryTransactions.length 
+      ? Math.max(...allInventoryTransactions.map(t => t.id)) + 1 
       : 1;
     
     const newTransaction: InventoryTransaction = {
       id: newId,
       ...transactionData,
       date: new Date().toISOString(),
+      establishmentId: transactionData.establishmentId || currentEstablishmentId, // Ensure establishment is set
     };
     
-    setInventoryTransactions([...inventoryTransactions, newTransaction]);
+    setAllInventoryTransactions([...allInventoryTransactions, newTransaction]);
     
     // Update product stock based on transaction
     updateProductStock(
@@ -164,9 +204,9 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   
   // Update product stock directly
   const updateProductStock = (productId: number, quantityChange: number) => {
-    setProducts(
-      products.map(product => {
-        if (product.id === productId) {
+    setAllProducts(
+      allProducts.map(product => {
+        if (product.id === productId && product.establishmentId === currentEstablishmentId) {
           const newStock = product.stock + quantityChange;
           return { ...product, stock: newStock >= 0 ? newStock : 0 };
         }
@@ -190,7 +230,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       
-      // Find the product
+      // Find the product in current establishment
       const product = products.find(p => p.id === item.productId);
       
       if (product) {
@@ -201,7 +241,8 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
           productId: item.productId,
           type: "saída",
           quantity: item.quantity,
-          reason: "Venda"
+          reason: "Venda",
+          establishmentId: currentEstablishmentId,
         });
         
         // Show toast for low inventory after sale if needed
@@ -220,7 +261,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
           });
         }
       } else {
-        console.warn(`Product with ID ${item.productId} not found in inventory`);
+        console.warn(`Product with ID ${item.productId} not found in current establishment inventory`);
       }
     });
   };
@@ -235,7 +276,9 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         deleteProduct,
         addInventoryTransaction,
         updateInventoryOnSale,
-        lowStockProducts
+        lowStockProducts,
+        currentEstablishmentId,
+        setCurrentEstablishmentId
       }}
     >
       {children}

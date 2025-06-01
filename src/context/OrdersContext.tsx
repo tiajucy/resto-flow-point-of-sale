@@ -25,6 +25,7 @@ export interface Order {
   total: number;
   paid?: boolean; // Track if order has been paid
   paymentMethod?: "Dinheiro" | "Cartão" | "PIX" | null;
+  establishmentId: string; // Add establishment isolation
 }
 
 // Context interface
@@ -32,13 +33,15 @@ interface OrdersContextType {
   orders: Order[];
   kitchenOrders: Order[];
   pendingPaymentOrders: Order[]; // Add orders awaiting payment
-  addOrder: (order: Omit<Order, "id" | "elapsedTime" | "priority">) => void;
+  addOrder: (order: Omit<Order, "id" | "elapsedTime" | "priority" | "establishmentId">) => void;
   updateOrderStatus: (id: string, status: Order["status"]) => void;
   toggleItemPrepared: (orderId: string, itemIndex: number) => void;
   markOrderAsPaid: (orderId: string, paymentMethod: Order["paymentMethod"]) => void; // Add payment function
   updateInventoryOnSale: (items: OrderItem[]) => void; // Add inventory update function
   updateOrder: (order: Order) => void; // Add update order function
   getOrderItemProductIds: (items: OrderItem[]) => OrderItem[]; // Add function to get product IDs
+  currentEstablishmentId: string;
+  setCurrentEstablishmentId: (id: string) => void;
 }
 
 // Create context with default values
@@ -52,14 +55,19 @@ const OrdersContext = createContext<OrdersContextType>({
   markOrderAsPaid: () => {},
   updateInventoryOnSale: () => {},
   updateOrder: () => {},
-  getOrderItemProductIds: () => []
+  getOrderItemProductIds: () => [],
+  currentEstablishmentId: "est-001",
+  setCurrentEstablishmentId: () => {},
 });
 
 // Provider component
 export const OrdersProvider = ({ children }: { children: ReactNode }) => {
-  const { updateInventoryOnSale: updateProductInventory, products } = useProducts();
+  const { updateInventoryOnSale: updateProductInventory, products, currentEstablishmentId: productEstablishmentId } = useProducts();
   
-  const [orders, setOrders] = useState<Order[]>([
+  // Current establishment context - in a real app this would come from authentication
+  const [currentEstablishmentId, setCurrentEstablishmentId] = useState<string>("est-001");
+  
+  const [allOrders, setAllOrders] = useState<Order[]>([
     {
       id: "#001",
       customer: "Mesa 5",
@@ -71,7 +79,8 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       time: "14:30",
       elapsedTime: "5 min",
       priority: "Normal",
-      total: 63.80
+      total: 63.80,
+      establishmentId: "est-001"
     },
     {
       id: "#002",
@@ -83,7 +92,8 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       time: "14:35",
       elapsedTime: "2 min",
       priority: "Urgente",
-      total: 114.00
+      total: 114.00,
+      establishmentId: "est-001"
     },
     {
       id: "#003",
@@ -96,23 +106,43 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       time: "14:40",
       elapsedTime: "1 min",
       priority: "Normal",
-      total: 30.90
+      total: 30.90,
+      establishmentId: "est-001"
+    },
+    // Sample orders for another establishment
+    {
+      id: "#004",
+      customer: "Mesa 1",
+      items: [
+        { id: 6, name: "Sushi Salmão", quantity: 10, notes: "", price: 18.90, prepared: false, productId: 5 },
+        { id: 7, name: "Temaki Atum", quantity: 2, notes: "Extra wasabi", price: 22.50, prepared: false, productId: 6 }
+      ],
+      status: "Aguardando",
+      time: "15:00",
+      elapsedTime: "2 min",
+      priority: "Normal",
+      total: 234.00,
+      establishmentId: "est-002"
     }
   ]);
 
-  // Filter orders that should appear in the kitchen
+  // Filter orders by current establishment
+  const orders = allOrders.filter(order => order.establishmentId === currentEstablishmentId);
+
+  // Filter orders that should appear in the kitchen for current establishment
   const kitchenOrders = orders.filter(
     order => ["Aguardando", "Em preparo"].includes(order.status)
   );
   
-  // Filter orders that are delivered but not paid
+  // Filter orders that are delivered but not paid for current establishment
   const pendingPaymentOrders = orders.filter(
     order => order.status === "Entregue" && !order.paid
   );
 
   // Add a new order
-  const addOrder = (orderData: Omit<Order, "id" | "elapsedTime" | "priority">) => {
-    const orderId = `#${String(orders.length + 1).padStart(3, '0')}`;
+  const addOrder = (orderData: Omit<Order, "id" | "elapsedTime" | "priority" | "establishmentId">) => {
+    const ordersCount = allOrders.filter(o => o.establishmentId === currentEstablishmentId).length;
+    const orderId = `#${String(ordersCount + 1).padStart(3, '0')}`;
     
     // Add prepared: false and ensure id property exists for each item
     const itemsWithPreparation = orderData.items.map((item, index) => ({
@@ -126,26 +156,29 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       ...orderData,
       items: itemsWithPreparation,
       elapsedTime: "0 min",
-      priority: "Normal"
+      priority: "Normal",
+      establishmentId: currentEstablishmentId // Assign to current establishment
     };
     
-    setOrders([...orders, newOrder]);
+    setAllOrders([...allOrders, newOrder]);
   };
 
   // Update order status
   const updateOrderStatus = (id: string, status: Order["status"]) => {
-    setOrders(
-      orders.map(order => 
-        order.id === id ? { ...order, status } : order
+    setAllOrders(
+      allOrders.map(order => 
+        order.id === id && order.establishmentId === currentEstablishmentId 
+          ? { ...order, status } 
+          : order
       )
     );
   };
   
   // Toggle item preparation status
   const toggleItemPrepared = (orderId: string, itemIndex: number) => {
-    setOrders(
-      orders.map(order => {
-        if (order.id === orderId) {
+    setAllOrders(
+      allOrders.map(order => {
+        if (order.id === orderId && order.establishmentId === currentEstablishmentId) {
           // Make a copy of the items array
           const updatedItems = [...order.items];
           
@@ -168,9 +201,9 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
   
   // Mark order as paid
   const markOrderAsPaid = (orderId: string, paymentMethod: Order["paymentMethod"]) => {
-    setOrders(
-      orders.map(order => 
-        order.id === orderId 
+    setAllOrders(
+      allOrders.map(order => 
+        order.id === orderId && order.establishmentId === currentEstablishmentId
           ? { ...order, paid: true, paymentMethod } 
           : order
       )
@@ -190,7 +223,7 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
         return item;
       }
       
-      // Try to find matching product by name (exact match first)
+      // Try to find matching product by name (exact match first) in current establishment
       let matchingProduct = products.find(product => 
         product.name.toLowerCase().trim() === item.name.toLowerCase().trim()
       );
@@ -235,15 +268,21 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
   const updateOrder = (updatedOrder: Order) => {
     console.log("Updating order:", updatedOrder.id);
     
+    // Ensure order belongs to current establishment
+    if (updatedOrder.establishmentId !== currentEstablishmentId) {
+      console.error("Cannot update order from different establishment");
+      return;
+    }
+    
     // Ensure all items have productId before updating
     const itemsWithProductIds = getOrderItemProductIds(updatedOrder.items);
     
     console.log("Items with product IDs:", JSON.stringify(itemsWithProductIds));
     
     // Update the order with the updated items
-    setOrders(
-      orders.map(order => 
-        order.id === updatedOrder.id 
+    setAllOrders(
+      allOrders.map(order => 
+        order.id === updatedOrder.id && order.establishmentId === currentEstablishmentId
           ? { ...updatedOrder, items: itemsWithProductIds } 
           : order
       )
@@ -268,7 +307,9 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
         markOrderAsPaid,
         updateInventoryOnSale,
         updateOrder,
-        getOrderItemProductIds
+        getOrderItemProductIds,
+        currentEstablishmentId,
+        setCurrentEstablishmentId
       }}
     >
       {children}

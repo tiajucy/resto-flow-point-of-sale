@@ -7,10 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProducts } from "@/context/ProductContext";
 import { useOrders, OrderItem, Order } from "@/context/OrdersContext";
 import { toast } from "@/hooks/use-toast";
+import { EstablishmentSelector } from "@/components/layout/EstablishmentSelector";
 
 // Sample product categories for demonstration
 const productCategories = [
-  "Todos", "Lanches", "Pizzas", "Bebidas", "Sobremesas", "Acompanhamentos"
+  "Todos", "Lanches", "Pizzas", "Bebidas", "Sobremesas", "Acompanhamentos", "Japonês"
 ];
 
 interface POSInterfaceProps {
@@ -21,7 +22,7 @@ interface POSInterfaceProps {
 }
 
 export const POSInterface = ({ orderType, onSubmit, onCancel, initialOrderData }: POSInterfaceProps) => {
-  const { products: inventoryProducts, updateInventoryOnSale } = useProducts();
+  const { products: inventoryProducts, updateInventoryOnSale, currentEstablishmentId } = useProducts();
   const { getOrderItemProductIds } = useOrders();
   
   const [selectedCategory, setSelectedCategory] = useState("Todos");
@@ -39,7 +40,7 @@ export const POSInterface = ({ orderType, onSubmit, onCancel, initialOrderData }
   // For editing mode
   const isEditing = !!initialOrderData;
 
-  // Use real product data from our inventory, including status
+  // Use real product data from our inventory for current establishment only
   const availableProducts = inventoryProducts.map(product => ({
     id: product.id,
     name: product.name,
@@ -60,6 +61,17 @@ export const POSInterface = ({ orderType, onSubmit, onCancel, initialOrderData }
   useEffect(() => {
     if (initialOrderData) {
       console.log("Initializing edit mode with order data:", initialOrderData);
+      
+      // Ensure the order belongs to current establishment
+      if (initialOrderData.establishmentId !== currentEstablishmentId) {
+        toast({
+          title: "Erro",
+          description: "Este pedido não pertence ao estabelecimento atual.",
+          variant: "destructive"
+        });
+        onCancel();
+        return;
+      }
       
       // Ensure all items have productId by matching with products
       const itemsWithProductIds = getOrderItemProductIds(initialOrderData.items);
@@ -87,7 +99,7 @@ export const POSInterface = ({ orderType, onSubmit, onCancel, initialOrderData }
         }
       }
     }
-  }, [initialOrderData, orderType, getOrderItemProductIds]);
+  }, [initialOrderData, orderType, getOrderItemProductIds, currentEstablishmentId]);
 
   const handleAddItem = (product: any, quantity: number, notes: string) => {
     const newItem: OrderItem = {
@@ -217,7 +229,8 @@ export const POSInterface = ({ orderType, onSubmit, onCancel, initialOrderData }
       deliveryFee,
       items: formattedItems,
       itemDetails: allItemsWithProductIds, // Use items with productId
-      total: calculateTotal()
+      total: calculateTotal(),
+      establishmentId: currentEstablishmentId // Include establishment context
     };
     
     console.log("Final order data:", JSON.stringify(orderData));
@@ -233,7 +246,10 @@ export const POSInterface = ({ orderType, onSubmit, onCancel, initialOrderData }
               orderType === "mesa" ? "Pedido de Mesa" : 
               orderType === "retirada" ? "Pedido de Retirada" : "Pedido de Delivery"}
           </h2>
-          <Button variant="outline" onClick={onCancel}>Fechar</Button>
+          <div className="flex items-center gap-4">
+            <EstablishmentSelector />
+            <Button variant="outline" onClick={onCancel}>Fechar</Button>
+          </div>
         </div>
 
         {/* Customer Information Section based on order type */}
